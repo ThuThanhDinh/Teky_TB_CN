@@ -1,0 +1,41 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #e9f7ef;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+
+.success-container {
+    text-align: center;
+    background-color: white;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+    font-size: 100px;
+    margin: 0;
+    color: #28a745; /* Màu xanh lá */
+}
+
+h2 {
+    margin: 10px 0;
+}
+
+p {
+    margin-bottom: 20px;
+}
+
+.home-link {
+    text-decoration: none;
+    color: #007bff; /* Màu xanh */
+    font-weight: bold;
+}
+
+.home-link:hover {
+    text-decoration: underline;
+}

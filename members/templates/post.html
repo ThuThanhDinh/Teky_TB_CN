@@ -1,0 +1,38 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Post Page</title>
+    <link rel="stylesheet" href="{% static 'post.css' %}">
+</head>
+<body>
+    <div class="post-container">
+        <div class="post-header">
+            <h1>Post Title</h1>
+            <p>By <a href="#">Author Name</a> | <time datetime="2024-12-08">December 8, 2024</time></p>
+        </div>
+        <div class="post-content">
+            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque et ex nec arcu pellentesque placerat. Cras vel enim libero. Nam vitae interdum nibh.</p>
+            <img src="https://via.placeholder.com/800x400" alt="Sample Image">
+            <p>Ut varius est nec lorem efficitur, a dictum ex vehicula. Nullam sit amet eros arcu. Fusce bibendum ligula vel orci consequat aliquet.</p>
+        </div>
+        <div class="post-footer">
+            <p>Category: <a href="#">Technology</a> | Tags: <a href="#">HTML</a>, <a href="#">CSS</a></p>
+        </div>
+    </div>
+
+    <div class="comment-section">
+        <h2>Comments</h2>
+        <div class="comment">
+            <p class="comment-author">User1:</p>
+            <p class="comment-text">This is a fantastic post! Very informative.</p>
+        </div>
+        <div class="comment">
+            <p class="comment-author">User2:</p>
+            <p class="comment-text">Thanks for sharing! I learned a lot.</p>
+        </div>
+    </div>
+</body>
+</html>
