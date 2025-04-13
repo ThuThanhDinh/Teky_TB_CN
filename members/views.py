@@ -4,6 +4,10 @@ from django.shortcuts import render
 from .models import Product, post
 from .forms import UserSignUpForm
 from django.shortcuts import render, redirect
+
+
+from django.contrib import messages
+from .models import User
 def members(request):
   template = loader.get_template('myfist.html')
   return HttpResponse(template.render())
@@ -16,9 +20,22 @@ def register(request):
   template = loader.get_template('register.html')
   return HttpResponse(template.render())
 
+# def login(request):
+#   template = loader.get_template('login.html')
+#   return HttpResponse(template.render())
+
 def login(request):
-  template = loader.get_template('login.html')
-  return HttpResponse(template.render())
+    if request.method == "POST":
+        username = request.POST.get("username")
+        password = request.POST.get("password")
+        try:
+            user = User.objects.get(username=username, password=password)
+            messages.success(request, "Đăng nhập thành công!")
+            return redirect('/trangchu')  # hoặc '/'
+        except User.DoesNotExist:
+            messages.error(request, "Sai tên đăng nhập hoặc mật khẩu.")
+            return redirect('login')
+    return render(request, "login.html")
 
 def error(request):
   template = loader.get_template('error.html')
@@ -57,7 +74,7 @@ def signUp(request):
         form = UserSignUpForm(request.POST)
         if form.is_valid():
             form.save()
-            return redirect('/')  # Chuyển hướng sau khi đăng ký thành công
+            return redirect('/login')  # Chuyển hướng sau khi đăng ký thành công
     else:
         form = UserSignUpForm()
     return render(request, 'register.html', {'form': form})

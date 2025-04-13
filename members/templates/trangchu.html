@@ -1,67 +1,84 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Find Your Perfect Car</title>
-  <link rel="stylesheet" href="{% static 'trangchu.css' %}">
-</head>
-<body>
-  <header class="header">
-    <div class="container">
-      <div class="navbar">
-        <h1 class="logo">BOXCARS</h1>
-        <nav>
-          <ul class="menu">
-            <li><a href="#">Home</a></li>
-            <li><a href="#">Listings</a></li>
-            <li><a href="#">Blog</a></li>
-            <li><a href="#">Pages</a></li>
-            <li><a href="#">About</a></li>
-            <li><a href="#">Contact</a></li>
-            <li><a href="#" class="signin">Sign In</a></li>
-          </ul>
-        </nav>
-        <button class="submit-listing">Submit Listing</button>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Find Your Perfect Car</title>
+    <link rel="stylesheet" href="{% static 'trangchu.css' %}" />
+  </head>
+  <body>
+    {% if messages %} {% for message in messages %}
+    <div id="toast" class="toast">{{ message }}</div>
+    <script>
+      window.onload = function () {
+        var toast = document.getElementById("toast");
+        toast.classList.add("show");
+        setTimeout(() => {
+          toast.classList.remove("show");
+        }, 3000);
+      };
+    </script>
+    {% endfor %} {% endif %}
+    <header class="header">
+      <div class="container">
+        <div class="navbar">
+          <h1 class="logo">BOXCARS</h1>
+          <nav>
+            <ul class="menu">
+              <li><a href="#">Home</a></li>
+              <li><a href="#">Listings</a></li>
+              <li><a href="#">Blog</a></li>
+              <li><a href="#">Pages</a></li>
+              <li><a href="#">About</a></li>
+              <li><a href="#">Contact</a></li>
+              <li><a href="#" class="signin">Sign In</a></li>
+            </ul>
+          </nav>
+          <button
+            href="{% templates 'trangbanhang.html' %}"
+            class="submit-listing"
+          >
+            Mua hàng
+          </button>
+        </div>
       </div>
-    </div>
-  </header>
+    </header>
 
-  <main class="main">
-    <div class="hero">
-      <div class="hero-content">
-        <h2>Find Your Perfect Car</h2>
-        <p>Find cars for sale and for rent near you</p>
-        <div class="search-bar">
-          <select>
-            <option>Any Makes</option>
-          </select>
-          <select>
-            <option>Any Models</option>
-          </select>
-          <select>
-            <option>All Prices</option>
-          </select>
-          <button class="search-btn">Search Cars</button>
-        </div>
-        <div class="filter-options">
-          <button>All</button>
-          <button>New</button>
-          <button>Used</button>
-        </div>
-        <div class="browse">
-          <p>Or Browse Featured Model</p>
-          <div class="categories">
-            <button>SUV</button>
-            <button>Sedan</button>
-            <button>Hatchback</button>
-            <button>Coupe</button>
-            <button>Hybrid</button>
+    <main class="main">
+      <div class="hero">
+        <div class="hero-content">
+          <h2>Find Your Perfect Car</h2>
+          <p>Find cars for sale and for rent near you</p>
+          <div class="search-bar">
+            <select>
+              <option>Any Makes</option>
+            </select>
+            <select>
+              <option>Any Models</option>
+            </select>
+            <select>
+              <option>All Prices</option>
+            </select>
+            <button class="search-btn">Search Cars</button>
+          </div>
+          <div class="filter-options">
+            <button>All</button>
+            <button>New</button>
+            <button>Used</button>
+          </div>
+          <div class="browse">
+            <p>Or Browse Featured Model</p>
+            <div class="categories">
+              <button>SUV</button>
+              <button>Sedan</button>
+              <button>Hatchback</button>
+              <button>Coupe</button>
+              <button>Hybrid</button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  </main>
-</body>
+    </main>
+  </body>
 </html>
