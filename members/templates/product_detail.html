@@ -65,6 +65,16 @@
 
       <p>{{ product.description }}</p>
       <p><strong>Giá:</strong> ${{ product.price }}</p>
+      Nút mua hàng
+      <a href="{% url 'order' product.id %}" class="buy-button">Mua ngay</a>
+
+      <form action="{% url 'add_to_cart' product.id %}" method="post">
+        {% csrf_token %}
+        <button type="submit" class="add-to-cart-button">Thêm vào giỏ hàng</button>
+      </form>
+
+
+
     </div>
   </body>
 </html>

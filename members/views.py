@@ -1,9 +1,11 @@
 from django.http import HttpResponse
 from django.template import loader
 from django.shortcuts import render
-from .models import Product, post
+from .models import Product, post,Order
 from .forms import UserSignUpForm
 from django.shortcuts import render, redirect,  get_object_or_404
+from .forms import OrderForm
+from django.utils import timezone
 
 
 from django.contrib import messages
@@ -88,3 +90,79 @@ def signUp(request):
 def product_detail(request, product_id):
     product = get_object_or_404(Product, id=product_id)
     return render(request, 'product_detail.html', {'product': product})
+
+
+
+def order_view(request, product_id):
+    product = get_object_or_404(Product, id=product_id)
+
+    if request.method == 'POST':
+        form = OrderForm(request.POST)
+        if form.is_valid():
+            order = form.save(commit=False)
+            order.product = product
+            order.save()
+            return redirect('trangbanhang')  # Sau khi đặt hàng, chuyển về trang bán hàng
+    else:
+        form = OrderForm()
+
+    return render(request, 'order.html', {'form': form, 'product': product})
+
+def add_to_cart(request, product_id):
+    product = get_object_or_404(Product, id=product_id)
+
+    cart = request.session.get('cart', {})
+
+    if str(product_id) in cart:
+        cart[str(product_id)] += 1
+    else:
+        cart[str(product_id)] = 1
+
+    request.session['cart'] = cart
+
+    return redirect('trangbanhang')  # Hoặc redirect đến trang giỏ hàng nếu bạn muốn
+
+def cart_view(request):
+    cart = request.session.get('cart', {})
+    products = []
+    total_price = 0
+
+    for product_id, quantity in cart.items():
+        product = get_object_or_404(Product, id=product_id)
+        product.quantity = quantity
+        product.total = product.price * quantity
+        products.append(product)
+        total_price += product.total
+
+    return render(request, 'cart.html', {
+        'products': products,
+        'total_price': total_price
+    })
+
+def checkout(request):
+    cart = request.session.get('cart', {})
+    if not cart:
+        return redirect('trangbanhang')
+
+    if request.method == "POST":
+        name = request.POST.get('name')
+        phone = request.POST.get('phone')
+        address = request.POST.get('address')
+
+        for product_id, quantity in cart.items():
+            product = get_object_or_404(Product, id=product_id)
+            for _ in range(quantity):  # Nếu số lượng > 1 thì tạo nhiều Order
+                Order.objects.create(
+                    product=product,
+                    customer_name=name,
+                    customer_phone=phone,
+                    customer_address=address,
+                    created_at=timezone.now()
+                )
+
+        # Sau khi mua xong thì xóa giỏ hàng
+        request.session['cart'] = {}
+
+        return redirect('trangbanhang')  # Hoặc redirect ra 1 trang "Mua thành công"
+
+    return render(request, 'checkout.html')

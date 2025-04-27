@@ -1,0 +1,78 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Giỏ hàng</title>
+  <link rel="stylesheet" href="{% static 'trangchu.css' %}">
+  <style>
+    table {
+      width: 80%;
+      margin: 30px auto;
+      border-collapse: collapse;
+    }
+
+    table, th, td {
+      border: 1px solid #ccc;
+    }
+
+    th, td {
+      padding: 10px;
+      text-align: center;
+    }
+
+    .checkout-button {
+      display: block;
+      width: 200px;
+      margin: 20px auto;
+      padding: 10px;
+      background-color: #007bff;
+      color: white;
+      text-align: center;
+      text-decoration: none;
+      border-radius: 5px;
+      font-size: 18px;
+    }
+
+    .checkout-button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <h1 style="text-align:center;">Giỏ hàng của bạn</h1>
+
+  {% if products %}
+  <table>
+    <thead>
+      <tr>
+        <th>Tên sản phẩm</th>
+        <th>Giá</th>
+        <th>Số lượng</th>
+        <th>Tổng</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for product in products %}
+      <tr>
+        <td>{{ product.name }}</td>
+        <td>${{ product.price }}</td>
+        <td>{{ product.quantity }}</td>
+        <td>${{ product.total }}</td>
+      </tr>
+      {% endfor %}
+      <tr>
+        <td colspan="3"><strong>Tổng tiền:</strong></td>
+        <td><strong>${{ total_price }}</strong></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <a href="{% url 'checkout' %}" class="checkout-button">Mua hàng</a>
+
+  {% else %}
+  <p style="text-align:center;">Giỏ hàng của bạn đang trống.</p>
+  {% endif %}
+
+</body>
+</html>

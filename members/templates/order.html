@@ -1,0 +1,49 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Đặt hàng - {{ product.name }}</title>
+    <link rel="stylesheet" href="{% static 'trangchu.css' %}">
+    <style>
+      .order-form {
+        max-width: 500px;
+        margin: auto;
+        padding: 20px;
+        background: #f9f9f9;
+        border-radius: 10px;
+      }
+      .order-form input {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 15px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+      }
+      .order-form button {
+        background-color: #df4710;
+        color: white;
+        padding: 10px;
+        width: 100%;
+        border: none;
+        border-radius: 5px;
+        font-size: 18px;
+      }
+      .order-form button:hover {
+        background-color: #b93800;
+      }
+    </style>
+</head>
+<body>
+
+<div class="order-form">
+    <h2>Đặt hàng: {{ product.name }}</h2>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Gửi đơn hàng</button>
+    </form>
+</div>
+
+</body>
+</html>

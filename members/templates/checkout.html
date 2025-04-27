@@ -1,0 +1,52 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Thanh toán</title>
+  <link rel="stylesheet" href="{% static 'trangchu.css' %}">
+  <style>
+    .checkout-form {
+      max-width: 500px;
+      margin: 50px auto;
+      padding: 30px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+    }
+
+    .checkout-form input, .checkout-form textarea {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    .checkout-form button {
+      width: 100%;
+      padding: 10px;
+      background-color: #28a745;
+      color: white;
+      font-size: 18px;
+      border: none;
+      border-radius: 5px;
+    }
+
+    .checkout-form button:hover {
+      background-color: #218838;
+    }
+  </style>
+</head>
+<body>
+  <h1 style="text-align:center;">Thông tin giao hàng</h1>
+
+  <form class="checkout-form" method="post">
+    {% csrf_token %}
+    <input type="text" name="name" placeholder="Họ và tên" required>
+    <input type="text" name="phone" placeholder="Số điện thoại" required>
+    <textarea name="address" placeholder="Địa chỉ giao hàng" rows="4" required></textarea>
+    <button type="submit">Xác nhận mua hàng</button>
+  </form>
+
+</body>
+</html>
