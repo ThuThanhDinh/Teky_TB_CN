@@ -1,0 +1,70 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>{{ product.name }}</title>
+    <link rel="stylesheet" href="{% static 'trangchu.css' %}" />
+    <style>
+      .back-link {
+        display: inline-block;
+        margin: 20px 0;
+        text-decoration: none;
+        color: #df4710;
+        font-weight: bold;
+        font-size: 16px;
+        transition: all 0.3s ease;
+      }
+
+      .back-link:hover {
+        color: #b93800;
+        transform: translateX(-5px);
+      }
+
+      .back-link::before {
+        content: "←";
+        margin-right: 8px;
+      }
+
+      .product-detail {
+        max-width: 800px;
+        margin: auto;
+        padding: 20px;
+        text-align: center;
+      }
+
+      .product-detail img {
+        max-width: 100%;
+        height: auto;
+        margin-bottom: 20px;
+        border-radius: 8px;
+      }
+
+      .product-detail h2 {
+        font-size: 28px;
+        margin-bottom: 10px;
+      }
+
+      .product-detail p {
+        font-size: 18px;
+        margin-bottom: 15px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container product-detail">
+      <a href="{% url 'trangbanhang' %}" class="back-link"
+        >Quay lại trang chủ</a
+      >
+
+      <h2>{{ product.name }}</h2>
+
+      {% if product.image %}
+      <img src="{{ product.image.url }}" alt="{{ product.name }}" />
+      {% endif %}
+
+      <p>{{ product.description }}</p>
+      <p><strong>Giá:</strong> ${{ product.price }}</p>
+    </div>
+  </body>
+</html>

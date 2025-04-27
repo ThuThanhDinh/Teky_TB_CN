@@ -3,7 +3,7 @@ from django.template import loader
 from django.shortcuts import render
 from .models import Product, post
 from .forms import UserSignUpForm
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect,  get_object_or_404
 
 
 from django.contrib import messages
@@ -51,11 +51,17 @@ def trangchu(request):
   template = loader.get_template('trangchu.html')
   return HttpResponse(template.render())
 
+# def trangbanhang(request):
+#   template = loader.get_template('trangbanhang.html')
+#   productdata = Product.objects.all()
+#   return HttpResponse(template.render())
 def trangbanhang(request):
-  template = loader.get_template('trangbanhang.html')
-  productdata = Product.objects.all()
-  return HttpResponse(template.render())
-
+    template = loader.get_template('trangbanhang.html')
+    productdata = Product.objects.all()
+    context = {
+        'products': productdata
+    }
+    return HttpResponse(template.render(context, request))
 def post(request):
   template = loader.get_template('post.html')
   # postdata = post.objects.all()
@@ -78,3 +84,7 @@ def signUp(request):
     else:
         form = UserSignUpForm()
     return render(request, 'register.html', {'form': form})
+
+def product_detail(request, product_id):
+    product = get_object_or_404(Product, id=product_id)
+    return render(request, 'product_detail.html', {'product': product})
