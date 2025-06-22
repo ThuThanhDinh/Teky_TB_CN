@@ -1,0 +1,12 @@
+
+
+{% extends 'blog/base.html' %}
+{% block title %}{{ object.title }} - Django Blog{% endblock %}
+{% block content %}
+<h1>{{ object.title }}</h1>
+<p>by {{ object.author }}</p>
+<p>{{ object.body }}</p>
+<a href="{% url 'post_edit' object.pk %}" class="btn btn-info">Edit Blog Post</a>
+<a href="{% url 'post_delete' object.pk %}" class="btn btn-danger">Delete Blog Post</a>
+<a href="{% url 'home' %}" class="btn btn-secondary">Back to Home</a>
+{% endblock %}

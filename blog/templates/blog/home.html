@@ -1,0 +1,16 @@
+{% extends 'blog/base.html' %}
+{% block title %}Home - Django Blog{% endblock %}
+{% block content %}
+<h1>All Blog Posts</h1>
+{% for post in object_list %}
+    <div class="card mb-3">
+        <div class="card-body">
+            <h4><a href="{% url 'post_detail' post.pk %}">{{ post.title }}</a></h4>
+            <p>by {{ post.author }} | <a href="{% url 'post_edit' post.pk %}">Edit</a> | <a href="{% url 'post_delete' post.pk %}">Delete</a></p>
+            <p>{{ post.body|truncatewords:30 }}</p>
+        </div>
+    </div>
+{% empty %}
+    <p>No posts yet.</p>
+{% endfor %}
+{% endblock %}

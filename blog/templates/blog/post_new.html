@@ -1,0 +1,14 @@
+
+
+
+
+{% extends 'blog/base.html' %}
+{% block title %}New Post - Django Blog{% endblock %}
+{% block content %}
+<h1>New Blog Post</h1>
+<form method="post">{% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-success">Save</button>
+    <a href="{% url 'home' %}" class="btn btn-secondary">Cancel</a>
+</form>
+{% endblock %}
