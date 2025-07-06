@@ -1,0 +1,42 @@
+{% extends 'registration/base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0">📰 Articles</h2>
+    <div>
+      {% if user.is_authenticated %}
+        <a href="{% url 'article_create' %}" class="btn btn-success">New Post</a>
+        <a href="{% url 'logout' %}" class="btn btn-outline-secondary">Logout</a>
+      {% else %}
+        <a href="{% url 'login' %}" class="btn btn-primary">Login</a>
+        <a href="{% url 'signup' %}" class="btn btn-info">Sign Up</a>
+      {% endif %}
+    </div>
+  </div>
+  <div class="row g-4">
+    {% for article in articles %}
+      <div class="col-md-6 col-lg-4">
+        <div class="card h-100 shadow-sm">
+          <div class="card-body d-flex flex-column">
+            <h5 class="card-title">
+              <a href="{% url 'article_detail' article.pk %}" class="text-decoration-none">{{ article.title }}</a>
+            </h5>
+            <h6 class="card-subtitle mb-2 text-muted">
+              <img src="https://ui-avatars.com/api/?name={{ article.author.username }}&background=random&size=32" class="rounded-circle me-1" style="width:32px; height:32px;"> 
+              {{ article.author.username }}
+              <span class="ms-2 small">{{ article.created_at|date:"d/m/Y H:i" }}</span>
+            </h6>
+            <p class="card-text flex-grow-1">{{ article.content|truncatechars:120 }}</p>
+            <a href="{% url 'article_detail' article.pk %}" class="btn btn-outline-primary mt-auto">Read more</a>
+          </div>
+        </div>
+      </div>
+    {% empty %}
+      <div class="col-12">
+        <div class="alert alert-info">No articles yet.</div>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %} 

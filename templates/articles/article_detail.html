@@ -1,0 +1,14 @@
+{% extends 'registration/base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+  <h2>{{ object.title }}</h2>
+  <p class="text-muted">by {{ object.author.username }} at {{ object.created_at|date:"d/m/Y H:i" }}</p>
+  <div class="mb-3">{{ object.content|linebreaks }}</div>
+  {% if user == object.author %}
+    <a href="{% url 'article_update' object.pk %}" class="btn btn-warning">Edit</a>
+    <a href="{% url 'article_delete' object.pk %}" class="btn btn-danger">Delete</a>
+  {% endif %}
+  <a href="{% url 'article_list' %}" class="btn btn-secondary">Back to list</a>
+</div>
+{% endblock %} 
