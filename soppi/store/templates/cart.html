@@ -1,0 +1,255 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <!-- Cột trái - Danh sách sản phẩm -->
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Giỏ hàng của bạn</h5>
+                </div>
+                <div class="card-body">
+                    {% for item in cartitems %}
+                    <!-- Sản phẩm 3 -->
+                    <div class="row mb-3">
+                        <div class="col-1">
+                            <input type="checkbox" class="form-check-input">
+                        </div>
+                        <div class="col-2">
+                            <img src={{item.product.image.url}}
+                                class="img-fluid rounded" alt="Bluetooth Headphones">
+                        </div>
+                        <div class="col-6">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <small class="text-muted">Yêu thích+</small>
+                                    <small class="text-primary">AudioWorld</small>
+                                </div>
+                            </div>
+                            <h6 class="mt-2">{{item.product.name}}</h6>
+                            <div class="mt-2">
+                                <span class="text-danger fw-bold">{{item.product.price}}</span>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="d-flex align-items-center">
+                                <form method="post" action="{% url 'decrease_cartitem' item.id %}" style="display:inline;">
+                                    {% csrf_token %}
+                                    <button class="btn btn-sm btn-outline-secondary">-</button>
+                                </form>
+                                <span class="mx-2">{{ item.quantity }}</span>
+                                <form method="post" action="{% url 'increase_cartitem' item.id %}" style="display:inline;">
+                                    {% csrf_token %}
+                                    <button class="btn btn-sm btn-outline-secondary">+</button>
+                                </form>
+                                <form method="post" action="{% url 'remove_cartitem' item.id %}" style="display:inline;">
+                                    {% csrf_token %}
+                                    <button class="btn btn-sm btn-outline-secondary me-2">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                      {% endfor %}
+                </div>
+            </div>
+        </div>
+        
+
+        <!-- Cột phải - Voucher và tổng thanh toán -->
+        <div class="col-md-4">
+            <!-- Voucher -->
+            <div class="card mb-3">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0">
+                        <i class="bi bi-gift text-warning"></i>
+                        Voucher của Shop
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <!-- Voucher 1 -->
+                    <div class="form-check mb-2 voucher-item">
+                        <input class="form-check-input" type="checkbox" id="voucher1">
+                        <label class="form-check-label" for="voucher1">
+                            <div class="fw-bold">Voucher giảm đến 30%</div>
+                            <small class="text-muted">Áp dụng cho đơn hàng từ ₫500,000</small>
+                        </label>
+                    </div>
+
+                    <!-- Voucher 2 -->
+                    <div class="form-check mb-2 voucher-item">
+                        <input class="form-check-input" type="checkbox" id="voucher2">
+                        <label class="form-check-label" for="voucher2">
+                            <div class="fw-bold">Miễn phí vận chuyển</div>
+                            <small class="text-muted">Cho đơn hàng từ ₫200,000</small>
+                        </label>
+                    </div>
+
+                    <!-- Voucher 3 -->
+                    <div class="form-check mb-3 voucher-item">
+                        <input class="form-check-input" type="checkbox" id="voucher3">
+                        <label class="form-check-label" for="voucher3">
+                            <div class="fw-bold">Giảm ₫50,000</div>
+                            <small class="text-muted">Cho đơn hàng từ ₫300,000</small>
+                        </label>
+                    </div>
+
+                    <!-- Nhập mã voucher -->
+                    <div class="input-group mb-3">
+                        <input type="text" class="form-control" placeholder="Nhập mã voucher">
+                        <button class="btn btn-outline-primary" type="button">Áp dụng</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Thông tin giảm phí vận chuyển -->
+            <div class="alert alert-info mb-3">
+                <small>
+                    Giảm ₫500,000 phí vận chuyển đơn tối thiểu ₫0
+                    <a href="#" class="text-decoration-none">Tìm hiểu thêm</a>
+                </small>
+            </div>
+
+            <!-- Tổng thanh toán -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <form method="post" action="{% url 'reset_cart_quantities' %}" style="display:inline;">
+                            {% csrf_token %}
+                            <button class="btn btn-sm btn-outline-primary">Reset số lượng về 1</button>
+                        </form>
+                        <button class="btn btn-sm btn-outline-primary">Chọn Tất Cả (2)</button>
+                        <div>
+                            <button class="btn btn-sm btn-outline-secondary me-1">Xóa</button>
+                            <button class="btn btn-sm btn-outline-secondary">Lưu vào mục Đã thích</button>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="text-center mb-3">
+                        <h5 class="text-danger fw-bold">Tổng thanh toán (<span id="selected-count">0</span> Sản phẩm):</h5>
+                        <h3 class="text-danger fw-bold" id="total-price">Vui lòng chọn sản phẩm</h3>
+                    </div>
+                    
+                    <form method="post" action="{% url 'checkout' %}" id="checkout-form">
+                        {% csrf_token %}
+                        {% for item in cartitems %}
+                            <input type="checkbox" name="selected_items" value="{{ item.id }}" class="cart-checkbox" style="display:none;">
+                        {% endfor %}
+                        <button type="submit" class="btn btn-danger w-100 btn-lg">
+                            Mua hàng
+                        </button>
+                    </form>
+                    <script>
+                    const checkboxes = document.querySelectorAll('.cart-checkbox');
+                    const visibleCheckboxes = document.querySelectorAll('.form-check-input');
+                    const prices = Array.from(document.querySelectorAll('.row.mb-3')).map(row => {
+                        const priceSpan = row.querySelector('.text-danger.fw-bold');
+                        if (priceSpan) {
+                            let price = priceSpan.textContent.replace(/[^\d]/g, '');
+                            return parseInt(price) || 0;
+                        }
+                        return 0;
+                    });
+                    const quantities = Array.from(document.querySelectorAll('.row.mb-3')).map(row => {
+                        const q = row.querySelector('.mx-2');
+                        return q ? parseInt(q.textContent.trim()) || 1 : 1;
+                    });
+                    function updateTotal() {
+                        let total = 0;
+                        let count = 0;
+                        checkboxes.forEach((cb, idx) => {
+                            if (cb.checked) {
+                                total += prices[idx] * quantities[idx];
+                                count += quantities[idx];
+                            }
+                        });
+                        document.getElementById('selected-count').textContent = count;
+                        document.getElementById('total-price').textContent = count > 0 ? `₫${total.toLocaleString('vi-VN')}` : 'Vui lòng chọn sản phẩm';
+                    }
+                    visibleCheckboxes.forEach((cb, idx) => {
+                        cb.addEventListener('change', function() {
+                            checkboxes[idx].checked = cb.checked;
+                            updateTotal();
+                        });
+                    });
+                    checkboxes.forEach((cb, idx) => {
+                        cb.addEventListener('change', updateTotal);
+                    });
+                    updateTotal();
+                    </script>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.card {
+    border: 1px solid #e0e0e0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.card-header {
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.form-check-input:checked {
+    background-color: #f53d2d;
+    border-color: #f53d2d;
+}
+
+.btn-outline-secondary:hover {
+    background-color: #f53d2d;
+    border-color: #f53d2d;
+}
+
+.text-danger {
+    color: #f53d2d !important;
+}
+
+.btn-danger {
+    background-color: #f53d2d;
+    border-color: #f53d2d;
+}
+
+.btn-danger:hover {
+    background-color: #e63946;
+    border-color: #e63946;
+}
+
+.voucher-item {
+    background-color: #fff5f5;
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+}
+
+.voucher-item:hover {
+    background-color: #ffe8e8;
+}
+
+.btn-outline-primary {
+    color: #f53d2d;
+    border-color: #f53d2d;
+}
+
+.btn-outline-primary:hover {
+    background-color: #f53d2d;
+    border-color: #f53d2d;
+}
+
+.btn-outline-primary:focus {
+    box-shadow: 0 0 0 0.2rem rgba(245, 61, 45, 0.25);
+}
+
+.alert-info {
+    background-color: #e3f2fd;
+    border-color: #90caf9;
+    color: #1565c0;
+}
+</style>
+{% endblock %}
