@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load humanize %}
+{% load vn_currency %}
 
 {% block content %}
 <div class="container-fluid mt-4">
@@ -26,6 +27,8 @@
         </div>
     </div>
 
+    <form method="post" action="{% url 'place_order' %}">
+        {% csrf_token %}
     <div class="row">
         <!-- Cột trái - Thông tin đơn hàng -->
         <div class="col-md-8">
@@ -41,18 +44,34 @@
                     <div class="row">
                         <div class="col-md-6">
                             <label class="form-label">Tên</label>
-                            <input type="text" class="form-control" value="{{ user.username }}" readonly>
+                            <input type="text" class="form-control" value="{{ customer.name|default:user.username }}" readonly>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Địa chỉ</label>
-                            <div class="d-flex align-items-center">
-                                <input type="text" class="form-control me-2" value="{{ user.address|default:'Chưa cập nhật' }}" readonly>
-                                <span class="badge bg-secondary">Mặc Định</span>
-                            </div>
+                            <label class="form-label">Email</label>
+                            <input type="text" class="form-control" value="{{ customer.email|default:user.email }}" readonly>
                         </div>
                     </div>
-                    <div class="text-end mt-2">
-                        <a href="{% url 'cart' %}" class="text-primary text-decoration-none">Thay Đổi</a>
+                    <div class="row mt-3">
+                        <div class="col-md-12">
+                            <label class="form-label">Địa chỉ *</label>
+                            <input type="text" class="form-control" id="shipping_address" name="shipping_address" placeholder="Nhập địa chỉ giao hàng" required>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Quận *</label>
+                            <input type="text" class="form-control" id="shipping_city" name="shipping_city" placeholder="" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Tỉnh/Thành phố *</label>
+                            <input type="text" class="form-control" id="shipping_state" name="shipping_state" placeholder="" required>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Mã bưu điện (Nếu có)</label>
+                            <input type="text" class="form-control" id="shipping_zipcode" name="shipping_zipcode" placeholder="">
+                        </div>
                     </div>
                 </div>
             </div>
@@ -63,19 +82,6 @@
                     <h6 class="mb-0">Sản phẩm</h6>
                 </div>
                 <div class="card-body">
-                    <!-- Thông tin người bán -->
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <div class="d-flex align-items-center">
-                            <span class="badge bg-warning me-2">Yêu thích</span>
-                            <span class="fw-bold">canhdecor</span>
-                        </div>
-                        <div class="d-flex align-items-center">
-                            <i class="bi bi-chat-dots text-success me-1"></i>
-                            <a href="#" class="text-success text-decoration-none">Chat ngay</a>
-                        </div>
-                    </div>
-
-                    <!-- Sản phẩm -->
                     {% for item in cartitems %}
                     <div class="row mb-3">
                         <div class="col-md-2">
@@ -83,13 +89,12 @@
                         </div>
                         <div class="col-md-6">
                             <h6>{{ item.product.name }}</h6>
-                            <small class="text-muted">Loại: {{ item.product.category|default:'-' }}</small>
                         </div>
                         <div class="col-md-4">
                             <div class="row text-center">
                                 <div class="col-4">
                                     <small class="text-muted">Đơn giá</small>
-                                    <div class="fw-bold">₫{{ item.product.price|intcomma }}</div>
+                                    <div class="fw-bold">₫{{ item.product.price|vn_currency }}</div>
                                 </div>
                                 <div class="col-4">
                                     <small class="text-muted">Số lượng</small>
@@ -97,39 +102,12 @@
                                 </div>
                                 <div class="col-4">
                                     <small class="text-muted">Thành tiền</small>
-                                    <div class="fw-bold text-danger">₫{{ item.product.price}}</div>
+                                    <div class="fw-bold text-danger">₫{{ item.get_total|vn_currency}}</div>
                                 </div>
                             </div>
                         </div>
                     </div>
 {% endfor %}
-                    <!-- Bảo hiểm sản phẩm -->
-                    <div class="border-top pt-3">
-                        <div class="form-check mb-2">
-                            <input class="form-check-input" type="checkbox" id="insurance">
-                            <label class="form-check-label" for="insurance">
-                                <strong>Bảo hiểm Thiệt hại sản phẩm</strong>
-                            </label>
-                        </div>
-                        <p class="text-muted small mb-2">
-                            Bảo vệ sản phẩm được bảo hiểm khỏi thiệt hại do sự cố bất ngờ, tiếp xúc với chất lỏng hoặc hư hỏng trong quá trình sử dụng.
-                            <a href="#" class="text-primary text-decoration-none">Tìm hiểu thêm</a>
-                        </p>
-                        <div class="row text-center">
-                            <div class="col-4">
-                                <small class="text-muted">Đơn giá</small>
-                                <div class="fw-bold">₫289</div>
-                            </div>
-                            <div class="col-4">
-                                <small class="text-muted">Số lượng</small>
-                                <div class="fw-bold">1</div>
-                            </div>
-                            <div class="col-4">
-                                <small class="text-muted">Thành tiền</small>
-                                <div class="fw-bold text-danger">₫289</div>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
 
@@ -157,12 +135,6 @@
                         <a href="{% url 'cart' %}" class="text-primary text-decoration-none">Thay Đổi</a>
                     </div>
                     
-                    <div class="mb-3">
-                        <div class="d-flex justify-content-between">
-                            <span>Phí vận chuyển:</span>
-                            <span class="fw-bold">₫37.700</span>
-                        </div>
-                    </div>
 
                     <!-- Thông tin giao hàng -->
                     <div class="alert alert-success mb-3">
@@ -175,29 +147,41 @@
 
                     <!-- Tổng tiền -->
                     <div class="border-top pt-3">
+                        {% if voucher_name %}
+                        <div class="alert alert-success mb-2">
+                            <i class="bi bi-check-circle"></i> {{ voucher_name }}
+                        </div>
+                        {% endif %}
                         <div class="d-flex justify-content-between mb-2">
                             <span>Tạm tính:</span>
-                            <span>₫{{ subtotal|intcomma }}</span>
+                            <span>₫{{ subtotal|vn_currency }}</span>
                         </div>
+                        {% if discount_amount > 0 %}
+                        <div class="d-flex justify-content-between mb-2 text-danger">
+                            <span>Giảm giá:</span>
+                            <span>-₫{{ discount_amount|vn_currency }}</span>
+                        </div>
+                        {% endif %}
                         <div class="d-flex justify-content-between mb-2">
                             <span>Phí vận chuyển:</span>
-                            <span>₫{{ shipping|intcomma }}</span>
+                            <span>₫{{ shipping|vn_currency }}</span>
                         </div>
                         <hr>
                         <div class="d-flex justify-content-between mb-3">
                             <strong>Tổng cộng:</strong>
-                            <strong class="text-danger fs-5">₫{{ total|intcomma }}</strong>
+                            <strong class="text-danger fs-5">₫{{ total|vn_currency }}</strong>
                         </div>
                     </div>
 
                     <!-- Nút thanh toán -->
-                    <button class="btn btn-danger w-100 btn-lg">
+                    <button type="submit" class="btn btn-danger w-100 btn-lg">
                         Đặt hàng
                     </button>
                 </div>
             </div>
         </div>
     </div>
+    </form>
 </div>
 
 <style>

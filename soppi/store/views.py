@@ -13,6 +13,7 @@ import json
 
 from django.contrib.auth import authenticate, login as auth_login
 from django.views.decorators.http import require_POST
+from django.contrib import messages
 
 
 # Create your views here.
@@ -34,20 +35,46 @@ def checkout(request):
         selected_ids = request.POST.getlist('selected_items')
         cartitems = Cartitems.objects.filter(id__in=selected_ids)
         subtotal = sum(item.product.price * item.quantity for item in cartitems)
+        
+        # Xử lý voucher
+        selected_voucher = request.POST.get('selected_voucher', '')
+        discount_amount = 0
+        voucher_name = ''
         shipping = 37700 if cartitems else 0
-        total = subtotal + shipping
+        
+        if selected_voucher:
+            if selected_voucher == 'discount_30' and subtotal >= 500000:
+                discount_amount = subtotal * 0.3
+                voucher_name = 'Giảm 30%'
+            elif selected_voucher == 'free_ship' and subtotal >= 200000:
+                shipping = 0
+                voucher_name = 'Miễn phí vận chuyển'
+            elif selected_voucher == 'discount_50k' and subtotal >= 300000:
+                discount_amount = 50000
+                voucher_name = 'Giảm ₫50.000'
+            
+        total = subtotal + shipping - discount_amount
     else:
         cartitems = []
         subtotal = 0
         shipping = 0
         total = 0
+        discount_amount = 0
+        voucher_name = ''
+    
+    if not request.user.is_authenticated:
+        return redirect('login')
     user = request.user
+    customer = user.customer
     return render(request, 'checkout.html', {
         'cartitems': cartitems,
         'subtotal': subtotal,
         'shipping': shipping,
         'total': total,
         'user': user,
+        'customer': customer,
+        'discount_amount': discount_amount,
+        'voucher_name': voucher_name,
     })
 
 
@@ -103,6 +130,11 @@ def login_view(request):
             return render(request, 'login.html', {'error': 'Sai thông tin đăng nhập'})
     return render(request, 'login.html')
 
+def logout_view(request):
+    from django.contrib.auth import logout
+    logout(request)
+    return redirect('store')
+
 def add_to_cart(request):
     if not request.user.is_authenticated:
         return redirect('login')
@@ -153,6 +185,43 @@ def remove_cartitem(request, item_id):
         return redirect('login')
     item = Cartitems.objects.get(id=item_id)
     item.delete()
+    return redirect('cart')
+
+@require_POST
+def place_order(request):
+    if not request.user.is_authenticated:
+        return redirect('login')
+    
+    customer = request.user.customer
+    cart = Cart.objects.filter(customer=customer, completed=False).first()
+    
+    if cart:
+        # Lưu địa chỉ giao hàng
+        address = request.POST.get('shipping_address', '')
+        city = request.POST.get('shipping_city', '')
+        state = request.POST.get('shipping_state', '')
+        zipcode = request.POST.get('shipping_zipcode', '')
+        
+        if address and city and state:
+            ShippingAddress.objects.create(
+                customer=customer,
+                cart=cart,
+                address=address,
+                city=city,
+                state=state,
+                zipcode=zipcode
+            )
+        
+        # Đánh dấu cart đã hoàn thành
+        cart.completed = True
+        cart.save()
+        
+        # Thông báo thành công
+        messages.success(request, 'Cảm ơn bạn! Đơn hàng của bạn đã được đặt thành công.')
+        
+        # Redirect về trang chủ với thông báo
+        return redirect('store')
+    
     return redirect('cart')
 
 
