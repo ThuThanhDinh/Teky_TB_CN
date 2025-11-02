@@ -1,0 +1,113 @@
+<!-- Kế thứa thành layout base.html-->
+
+{% extends 'base.html' %}
+
+<!-- Phần nội dung hiển thị-->
+
+{% block content %}
+
+<div class="container">
+  <div class="row">
+    {% for product in products %}
+    <div class="col-md-4 col-lg-4 mb-4">
+      <div class="card product-card h-100">
+        <div class="card-img-container">
+          <img src="{{product.image.url}}" class="card-img-top product-image" alt="{{product.name}}" />
+        </div>
+
+        <div class="card-body d-flex flex-column">
+          <h5 class="card-title product-title">{{product.name}}</h5>
+          <h6 class="card-text product-price">${{product.price}}</h6>
+          <div class="mt-auto">
+            <button
+              class="btn btn-primary addtocart w-100"
+              data-action="add"
+              data-product="{{product.id}}"
+            >
+              <i class="fas fa-shopping-cart me-2"></i>Add to Cart
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor%}
+  </div>
+  
+  <!-- Pagination -->
+  {% if products.paginator.num_pages > 1 %}
+  <div class="pagination-container">
+    <nav aria-label="Product pagination">
+      <ul class="pagination justify-content-center">
+        {% if products.has_previous %}
+          <li class="page-item">
+            <a class="page-link" href="?page=1" aria-label="First">
+              <i class="fas fa-angle-double-left"></i>
+            </a>
+          </li>
+          <li class="page-item">
+            <a class="page-link" href="?page={{ products.previous_page_number }}" aria-label="Previous">
+              <i class="fas fa-angle-left"></i>
+            </a>
+          </li>
+        {% else %}
+          <li class="page-item disabled">
+            <span class="page-link">
+              <i class="fas fa-angle-double-left"></i>
+            </span>
+          </li>
+          <li class="page-item disabled">
+            <span class="page-link">
+              <i class="fas fa-angle-left"></i>
+            </span>
+          </li>
+        {% endif %}
+
+        {% for num in products.paginator.page_range %}
+          {% if products.number == num %}
+            <li class="page-item active">
+              <span class="page-link">{{ num }}</span>
+            </li>
+          {% elif num > products.number|add:'-3' and num < products.number|add:'3' %}
+            <li class="page-item">
+              <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+            </li>
+          {% endif %}
+        {% endfor %}
+
+        {% if products.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ products.next_page_number }}" aria-label="Next">
+              <i class="fas fa-angle-right"></i>
+            </a>
+          </li>
+          <li class="page-item">
+            <a class="page-link" href="?page={{ products.paginator.num_pages }}" aria-label="Last">
+              <i class="fas fa-angle-double-right"></i>
+            </a>
+          </li>
+        {% else %}
+          <li class="page-item disabled">
+            <span class="page-link">
+              <i class="fas fa-angle-right"></i>
+            </span>
+          </li>
+          <li class="page-item disabled">
+            <span class="page-link">
+              <i class="fas fa-angle-double-right"></i>
+            </span>
+          </li>
+        {% endif %}
+      </ul>
+    </nav>
+    
+    <div class="pagination-info text-center mt-3">
+      <small class="text-muted">
+        Page {{ products.number }} of {{ products.paginator.num_pages }} 
+        ({{ products.paginator.count }} total items)
+      </small>
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+{% endblock %}
