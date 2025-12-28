@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load vn_currency %}
+{% load humanize %}
 
 {% block content %}
 <div class="container-fluid mt-4">
@@ -50,54 +51,8 @@
         </div>
         
 
-        <!-- Cột phải - Voucher và tổng thanh toán -->
+        <!-- Cột phải - Tổng thanh toán -->
         <div class="col-md-4">
-            <!-- Voucher -->
-            <div class="card mb-3">
-                <div class="card-header bg-white">
-                    <h6 class="mb-0">
-                        <i class="bi bi-gift text-warning"></i>
-                        Voucher của Shop
-                    </h6>
-                </div>
-                <div class="card-body">
-                    <!-- Voucher 1 -->
-                    <div class="form-check mb-2 voucher-item">
-                        <input class="form-check-input voucher-radio" type="radio" name="selected_voucher" id="voucher1" value="discount_30">
-                        <label class="form-check-label" for="voucher1">
-                            <div class="fw-bold">Giảm 30%</div>
-                            <small class="text-muted">Áp dụng cho đơn hàng từ ₫500.000</small>
-                        </label>
-                    </div>
-
-                    <!-- Voucher 2 -->
-                    <div class="form-check mb-2 voucher-item">
-                        <input class="form-check-input voucher-radio" type="radio" name="selected_voucher" id="voucher2" value="free_ship">
-                        <label class="form-check-label" for="voucher2">
-                            <div class="fw-bold">Miễn phí vận chuyển</div>
-                            <small class="text-muted">Cho đơn hàng từ ₫200.000</small>
-                        </label>
-                    </div>
-
-                    <!-- Voucher 3 -->
-                    <div class="form-check mb-3 voucher-item">
-                        <input class="form-check-input voucher-radio" type="radio" name="selected_voucher" id="voucher3" value="discount_50k">
-                        <label class="form-check-label" for="voucher3">
-                            <div class="fw-bold">Giảm ₫50.000</div>
-                            <small class="text-muted">Cho đơn hàng từ ₫300.000</small>
-                        </label>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Thông tin giảm phí vận chuyển -->
-            <div class="alert alert-info mb-3">
-                <small>
-                    Giảm ₫500,000 phí vận chuyển đơn tối thiểu ₫0
-                    <a href="#" class="text-decoration-none">Tìm hiểu thêm</a>
-                </small>
-            </div>
-
             <!-- Tổng thanh toán -->
             <div class="card">
                 <div class="card-body">
@@ -120,7 +75,6 @@
                         {% for item in cartitems %}
                             <input type="checkbox" name="selected_items" value="{{ item.id }}" class="cart-checkbox" style="display:none;">
                         {% endfor %}
-                        <input type="hidden" name="selected_voucher" id="voucher-input" value="">
                         <button type="submit" class="btn btn-danger w-100 btn-lg">
                             Mua hàng
                         </button>
@@ -156,15 +110,6 @@
                         document.getElementById('total-price').textContent = `₫${formattedTotal}`;
                     }
                     
-                    // Xử lý voucher
-                    const voucherRadios = document.querySelectorAll('.voucher-radio');
-                    const voucherInput = document.getElementById('voucher-input');
-                    voucherRadios.forEach((radio) => {
-                        radio.addEventListener('change', function() {
-                            voucherInput.value = this.value;
-                        });
-                    });
-                    
                     updateTotal();
                     
                     // Cập nhật lại total khi thay đổi số lượng (sau khi redirect)
@@ -193,11 +138,6 @@
     border-color: #f53d2d;
 }
 
-.voucher-radio[type="radio"]:checked {
-    background-color: #f53d2d;
-    border-color: #f53d2d;
-}
-
 .btn-outline-secondary:hover {
     background-color: #f53d2d;
     border-color: #f53d2d;
@@ -217,17 +157,6 @@
     border-color: #e63946;
 }
 
-.voucher-item {
-    background-color: #fff5f5;
-    padding: 10px;
-    border-radius: 8px;
-    margin-bottom: 8px;
-}
-
-.voucher-item:hover {
-    background-color: #ffe8e8;
-}
-
 .btn-outline-primary {
     color: #f53d2d;
     border-color: #f53d2d;
@@ -242,10 +171,5 @@
     box-shadow: 0 0 0 0.2rem rgba(245, 61, 45, 0.25);
 }
 
-.alert-info {
-    background-color: #e3f2fd;
-    border-color: #90caf9;
-    color: #1565c0;
-}
 </style>
 {% endblock %}

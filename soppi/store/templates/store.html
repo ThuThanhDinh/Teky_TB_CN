@@ -1,74 +1,248 @@
-<!-- Kế thứa thành layout base.html-->
-
 {% extends 'base.html' %}
 {% load vn_currency %}
+{% load humanize %}
 
 {% block content %}
-<div class="container-fluid mt-4 ">
-    
- <div class="row">
-        <!-- Sản phẩm 1 -->
-                 {% for product in products %}    
+<div class="container-fluid mt-4">
+    <div class="row">
+        <!-- Sidebar Filter -->
+        <div class="col-md-3 mb-4">
+            <div class="filter-sidebar card p-3">
+                <h5 class="mb-3 fw-bold">Bộ lọc</h5>
+                
+                <!-- Filter Form -->
+                <form method="get" id="filter-form" class="mb-3">
+                    <!-- Price Filter -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Giá (₫)</label>
+                        <div class="d-flex gap-2">
+                            <input type="number" name="price_min" class="form-control form-control-sm" placeholder="Min" value="{{ price_min }}">
+                            <input type="number" name="price_max" class="form-control form-control-sm" placeholder="Max" value="{{ price_max }}">
+                        </div>
+                    </div>
 
-        <div class="col-md-3 col-lg-3 mb-3">
-            <div class="card h-100 product-card">
-                <div class="position-relative">
-                    <img src={{product.image.url}} class="card-img-top" alt="">
-                    <div class="position-absolute top-0 start-0 m-2">
-                        <span class="badge bg-warning text-dark">25.8</span>
-                        <span class="badge bg-warning text-dark">VOUCHER XTRA</span>
+                    <!-- Rating Filter -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Đánh giá</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="rating" value="" id="rating-all" {% if not rating %}checked{% endif %}>
+                            <label class="form-check-label" for="rating-all">Tất cả</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="rating" value="4" id="rating-4" {% if rating == '4' %}checked{% endif %}>
+                            <label class="form-check-label" for="rating-4">⭐ 4+ sao</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="rating" value="3" id="rating-3" {% if rating == '3' %}checked{% endif %}>
+                            <label class="form-check-label" for="rating-3">⭐ 3+ sao</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="rating" value="2" id="rating-2" {% if rating == '2' %}checked{% endif %}>
+                            <label class="form-check-label" for="rating-2">⭐ 2+ sao</label>
+                        </div>
                     </div>
-                    <div class="position-absolute top-0 end-0 m-2">
-                        <span class="badge bg-danger">Yêu thích+</span>
+
+                    <!-- Buttons -->
+                    <button type="submit" class="btn btn-sm btn-primary w-100 mb-2">Lọc</button>
+                    <a href="{% url 'store' %}" class="btn btn-sm btn-outline-secondary w-100">Đặt lại</a>
+                </form>
+                
+                <hr>
+                
+                <!-- Vouchers Section -->
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="fw-bold mb-0">
+                            <i class="bi bi-gift text-warning"></i> Voucher khả dụng
+                        </h6>
+                        <a href="{% url 'vouchers' %}" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-list"></i> Tất cả
+                        </a>
                     </div>
+                {% if applicable_vouchers %}
+                    <div class="list-group" style="max-height: 400px; overflow-y: auto;">
+                        {% for v in applicable_vouchers %}
+                        <div class="list-group-item p-2 mb-2">
+                            <div class="d-flex align-items-start">
+                                {% if v.image %}
+                                <img src="{{ v.image.url }}" alt="{{ v.code }}" style="width:40px; height:40px; object-fit:cover; margin-right:8px;" class="rounded">
+                                {% endif %}
+                                <div class="flex-grow-1">
+                                    <div class="fw-bold small">{{ v.code }}</div>
+                                    {% if v.percent and v.percent > 0 %}
+                                    <div class="small text-muted">Giảm {{ v.percent }}%</div>
+                                    {% elif v.fixed_amount %}
+                                    <div class="small text-muted">Giảm ₫{{ v.fixed_amount|intcomma }}</div>
+                                    {% endif %}
+                                    <div class="small text-muted">Min: ₫{{ v.min_purchase|intcomma }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-3">
+                        <p class="text-muted small mb-2">Chưa có voucher khả dụng</p>
+                        <a href="{% url 'vouchers' %}" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-list"></i> Xem tất cả voucher
+                        </a>
+                    </div>
+                {% endif %}
                 </div>
-                <div class="card-body">
-                    <h6 class="card-title">{{product.name}}</h6>
-                    <div class="d-flex align-items-center mb-2">
-                        <span class="text-danger fw-bold fs-5">₫{{product.price|vn_currency}}</span>
-                        <span class="badge bg-danger ms-2">-16%</span>
-                    </div>
-                    <div class="mb-2">
-                        <small class="text-muted text-decoration-line-through">₫{{product.price|vn_currency}}</small>
-                    </div>
+            </div>
+        </div>
+
+        <!-- Products Container -->
+        <div class="col-md-9">
+            {% if query %}
+            <div class="mb-3">
+                {% if search_type == 'shop' %}
+                <div class="alert alert-light py-2">{{ shops|length }} cửa hàng được tìm thấy cho "<strong>{{ query }}</strong>"</div>
+                {% else %}
+                <div class="alert alert-light py-2">{{ results_count }} sản phẩm được tìm thấy cho "<strong>{{ query }}</strong>"</div>
+                {% endif %}
+            </div>
+            {% endif %}
+            
+            <div class="row">
+                {% for product in products %}
+                <div class="col-md-4 col-lg-3 mb-3">
+                    <div class="card h-100 product-card">
+                        <a href="{% url 'product_detail' product.id %}">
+                            <div class="position-relative">
+                                <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.name }}">
+                                <div class="position-absolute top-0 end-0 m-2">
+                                    <span class="badge bg-danger">Yêu thích+</span>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <h6 class="card-title">{{ product.name }}</h6>
+                                <div class="d-flex align-items-center mb-2">
+                                    <span class="text-danger fw-bold fs-5">{{ product.price|vn_currency }}₫</span>
+                                </div>
+                            </div>
+                        </a>
                         <form method="post" action="{% url 'add_to_cart' %}">
                             {% csrf_token %}
                             <input type="hidden" name="product_id" value="{{ product.id }}">
                             <button type="submit" class="btn btn-primary w-100 mt-2">Thêm vào giỏ hàng</button>
                         </form>
+                    </div>
                 </div>
+                {% empty %}
+                <div class="col-12 text-center py-5">
+                    <i class="bi bi-inbox" style="font-size: 3rem; color: #ccc;"></i>
+                    <p class="text-muted mt-3">Không tìm thấy sản phẩm nào.</p>
+                </div>
+                {% endfor %}
             </div>
-        </div>
-        {% endfor %}
 
+            <!-- Pagination -->
+            <div class="pagination">
+                {% if products.has_previous %}
+                    <a href="?page=1{% if query %}&q={{ query }}{% endif %}{% if price_min %}&price_min={{ price_min }}{% endif %}{% if price_max %}&price_max={{ price_max }}{% endif %}{% if rating %}&rating={{ rating }}{% endif %}">&laquo; First</a>
+                    <a href="?page={{ products.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if price_min %}&price_min={{ price_min }}{% endif %}{% if price_max %}&price_max={{ price_max }}{% endif %}{% if rating %}&rating={{ rating }}{% endif %}">Previous</a>
+                {% endif %}
 
+                <span class="current">
+                    Page {{ products.number }} of {{ products.paginator.num_pages }}
+                </span>
 
-<div class="pagination">
-    {% if products.has_previous %}
-        <a href="?page=1">&laquo; First</a>
-        <a href="?page={{ products.previous_page_number }}">Previous</a>
-    {% endif %}
-
-    <span class="current">
-        Page {{ products.number }} of {{ products.paginator.num_pages }}
-    </span>
-
-    {% if products.has_next %}
-        <a href="?page={{ products.next_page_number }}">Next</a>
-        <a href="?page={{ products.paginator.num_pages }}">Last &raquo;</a>
-    {% endif %}
-</div>
-                </div>
+                {% if products.has_next %}
+                    <a href="?page={{ products.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if price_min %}&price_min={{ price_min }}{% endif %}{% if price_max %}&price_max={{ price_max }}{% endif %}{% if rating %}&rating={{ rating }}{% endif %}">Next</a>
+                    <a href="?page={{ products.paginator.num_pages }}{% if query %}&q={{ query }}{% endif %}{% if price_min %}&price_min={{ price_min }}{% endif %}{% if price_max %}&price_max={{ price_max }}{% endif %}{% if rating %}&rating={{ rating }}{% endif %}">Last &raquo;</a>
+                {% endif %}
             </div>
         </div>
     </div>
-
-   
-   
+    
+    <!-- Shops Section (Bottom) -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <h4 class="mb-4">{% if query and search_type == 'shop' %}Kết quả tìm kiếm cửa hàng{% else %}Cửa hàng nổi bật{% endif %}</h4>
+            <div class="row">
+                {% for shop in shops %}
+                <div class="col-md-3 col-lg-3 mb-4">
+                    <div class="card h-100 shop-card" style="cursor: pointer;" onclick="window.location.href='{% url 'shop_detail' shop.id %}'">
+                        {% if shop.cover_image %}
+                        <div class="position-relative" style="height: 150px; overflow: hidden;">
+                            <img src="{{ shop.cover_image.url }}" class="card-img-top" alt="{{ shop.name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                        </div>
+                        {% else %}
+                        <div class="bg-light" style="height: 150px; display: flex; align-items: center; justify-content: center;">
+                            <i class="bi bi-shop" style="font-size: 3rem; color: #ccc;"></i>
+                        </div>
+                        {% endif %}
+                        <div class="card-body">
+                            <div class="d-flex align-items-start mb-2">
+                                {% if shop.logo %}
+                                <img src="{{ shop.logo.url }}" alt="{{ shop.name }}" class="rounded-circle me-2" style="width: 50px; height: 50px; object-fit: cover;">
+                                {% else %}
+                                <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center me-2" style="width: 50px; height: 50px;">
+                                    <i class="bi bi-shop text-white"></i>
+                                </div>
+                                {% endif %}
+                                <div class="flex-grow-1">
+                                    <h6 class="card-title mb-1">{{ shop.name }}</h6>
+                                    <div class="d-flex align-items-center mb-1">
+                                        <span class="text-warning me-1">
+                                            {% for i in "12345" %}
+                                                {% if forloop.counter <= shop.average_rating|floatformat:0|add:"0" %}
+                                                    <i class="bi bi-star-fill"></i>
+                                                {% else %}
+                                                    <i class="bi bi-star"></i>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </span>
+                                        <small class="text-muted">({{ shop.average_rating|floatformat:1 }})</small>
+                                    </div>
+                                    <small class="text-muted d-block">{{ shop.product_count }} sản phẩm</small>
+                                </div>
+                            </div>
+                            {% if shop.address %}
+                            <div class="small text-muted mb-2">
+                                <i class="bi bi-geo-alt"></i> {{ shop.address|truncatewords:8 }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-12 text-center py-3">
+                    <p class="text-muted">Chưa có cửa hàng nào.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
 </div>
 
 <style>
+/* ===== Filter Sidebar ===== */
+.filter-sidebar {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    background-color: #fafafa;
+    position: sticky;
+    top: 80px;
+    max-height: calc(100vh - 100px);
+    overflow-y: auto;
+}
 
+.filter-sidebar label {
+    font-size: 0.95rem;
+    color: #333;
+}
+
+.filter-sidebar .form-control-sm {
+    font-size: 0.85rem;
+}
+
+.filter-sidebar .form-check {
+    margin-bottom: 0.5rem;
+}
+
+/* ===== Pagination ===== */
 .pagination {
     display: flex;
     justify-content: center;
@@ -89,95 +263,107 @@
 }
 
 .pagination a:hover {
-    background-color: #007bff;
+    background-color: #fe6f36;
     color: #fff;
-    border-color: #007bff;
+    border-color: #fe6f36;
 }
 
 .pagination .current {
-    background-color: #007bff;
+    background-color: #fe6f36;
     color: #fff;
     font-weight: bold;
-    border-color: #007bff;
+    border-color: #fe6f36;
 }
 
+/* ===== Shop Card ===== */
+.shop-card {
+    border: 1px solid #e0e0e0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    border-radius: 12px;
+    background: #ffffff;
+    overflow: hidden;
+}
+
+.shop-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.14);
+    border-color: #f53d2d;
+}
+
+/* ===== Product Card ===== */
 .product-card {
     border: 1px solid #e0e0e0;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    transition: transform 0.2s, box-shadow 0.2s;
-    margin: 0 8px;
-    max-width: 280px;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    border-radius: 12px;
+    background: #ffffff;
 }
 
 .product-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    transform: translateY(-4px);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.14);
 }
 
 .card-img-top {
-    height: 120px;
+    height: 180px;
     object-fit: cover;
-}
-
-.text-danger {
-    color: #f53d2d !important;
-}
-
-.badge.bg-danger {
-    background-color: #f53d2d !important;
-}
-
-.badge.bg-warning {
-    background-color: #ffc107 !important;
-    color: #000 !important;
-}
-
-.badge.bg-success {
-    background-color: #28a745 !important;
-}
-
-.badge.bg-info {
-    background-color: #17a2b8 !important;
-}
-
-.text-warning {
-    color: #ffc107 !important;
+    border-radius: 10px 10px 0 0;
 }
 
 .card-title {
-    font-size: 0.75rem;
-    line-height: 1.1;
-    height: 2.2rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #333;
+    letter-spacing: 0.2px;
+    line-height: 1.2;
+    max-height: 2.4rem;
     overflow: hidden;
     display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
     -webkit-box-orient: vertical;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.4rem;
+}
+
+.text-danger {
+    color: #fe6f36 !important;
+    font-size: 1rem !important;
+    font-weight: 700 !important;
+}
+
+.badge.bg-danger {
+    background-color: #ff5a36 !important;
 }
 
 .product-card .card-body {
-    padding: 0.5rem;
+    padding: 0.75rem;
 }
 
-.product-card .fs-5 {
-    font-size: 0.9rem !important;
+.btn-primary {
+    background: #fe6f36 !important;
+    border: none !important;
+    color: white !important;
+    font-weight: 600;
+    font-size: 0.85rem;
+    padding: 8px 0;
+    transition: 0.25s ease;
+    border-radius: 6px;
 }
 
-.product-card small {
-    font-size: 0.65rem;
+.btn-primary:hover {
+    background: #ff815a !important;
+    transform: translateY(-2px);
+    box-shadow: 0 3px 8px rgba(254, 111, 54, 0.45);
 }
 
-.product-card .badge {
-    font-size: 0.55rem;
+.product-card a {
+    text-decoration: none !important;
+    color: inherit !important;
 }
 
-.product-card .mb-2 {
-    margin-bottom: 0.4rem !important;
+.product-card a:hover {
+    text-decoration: none !important;
 }
-
-.product-card .mb-3 {
-    margin-bottom: 0.6rem !important;
-}
-
-
 </style>
 {% endblock %}

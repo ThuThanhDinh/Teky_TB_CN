@@ -1,0 +1,198 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block content %}
+<div class="container mt-4">
+    <h4 class="mb-4">Hồ sơ của tôi</h4>
+    
+    <!-- Thông tin cá nhân -->
+    <div class="card mb-4">
+        <div class="card-header bg-white">
+            <h6 class="mb-0"><i class="bi bi-person-circle me-2"></i>Thông tin cá nhân</h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <label class="form-label">Tên</label>
+                    <input type="text" class="form-control" value="{{ customer.name }}" readonly>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Email</label>
+                    <input type="text" class="form-control" value="{{ customer.email }}" readonly>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quản lý địa chỉ -->
+    <div class="card">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <h6 class="mb-0"><i class="bi bi-geo-alt me-2"></i>Địa chỉ giao hàng</h6>
+            <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addAddressModal">
+                <i class="bi bi-plus-circle"></i> Thêm địa chỉ
+            </button>
+        </div>
+        <div class="card-body">
+            {% if addresses %}
+                <div class="row">
+                    {% for addr in addresses %}
+                    <div class="col-md-6 mb-3">
+                        <div class="card {% if addr.is_default %}border-success{% endif %}">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div>
+                                        {% if addr.is_default %}
+                                        <span class="badge bg-success mb-2">Mặc định</span>
+                                        {% endif %}
+                                        <h6 class="mb-1">{{ addr.address }}</h6>
+                                        <p class="text-muted small mb-1">{{ addr.city }}, {{ addr.state }}</p>
+                                        {% if addr.zipcode %}
+                                        <p class="text-muted small mb-0">Mã bưu điện: {{ addr.zipcode }}</p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="d-flex gap-2 mt-3">
+                                    {% if not addr.is_default %}
+                                    <form method="post" action="{% url 'set_default_address' addr.id %}" style="display:inline;">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-outline-success">
+                                            <i class="bi bi-star"></i> Đặt mặc định
+                                        </button>
+                                    </form>
+                                    {% endif %}
+                                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="editAddress({{ addr.id }}, '{{ addr.address }}', '{{ addr.city }}', '{{ addr.state }}', '{{ addr.zipcode|default:"" }}', {{ addr.is_default|yesno:"true,false" }})" data-bs-toggle="modal" data-bs-target="#editAddressModal">
+                                        <i class="bi bi-pencil"></i> Sửa
+                                    </button>
+                                    <form method="post" action="{% url 'delete_address' addr.id %}" style="display:inline;" onsubmit="return confirm('Bạn có chắc muốn xóa địa chỉ này?');">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                            <i class="bi bi-trash"></i> Xóa
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-inbox" style="font-size: 3rem; color: #ccc;"></i>
+                    <p class="text-muted mt-3">Bạn chưa có địa chỉ nào. Hãy thêm địa chỉ để tiện cho việc mua hàng!</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Modal Thêm địa chỉ -->
+<div class="modal fade" id="addAddressModal" tabindex="-1" aria-labelledby="addAddressModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addAddressModalLabel">Thêm địa chỉ mới</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="{% url 'add_address' %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Địa chỉ *</label>
+                        <input type="text" class="form-control" name="address" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Quận/Huyện *</label>
+                        <input type="text" class="form-control" name="city" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Tỉnh/Thành phố *</label>
+                        <input type="text" class="form-control" name="state" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Mã bưu điện (Nếu có)</label>
+                        <input type="text" class="form-control" name="zipcode">
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="is_default" id="addIsDefault">
+                        <label class="form-check-label" for="addIsDefault">
+                            Đặt làm địa chỉ mặc định
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary">Thêm địa chỉ</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Sửa địa chỉ -->
+<div class="modal fade" id="editAddressModal" tabindex="-1" aria-labelledby="editAddressModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editAddressModalLabel">Sửa địa chỉ</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="" id="editAddressForm">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Địa chỉ *</label>
+                        <input type="text" class="form-control" name="address" id="editAddress" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Quận/Huyện *</label>
+                        <input type="text" class="form-control" name="city" id="editCity" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Tỉnh/Thành phố *</label>
+                        <input type="text" class="form-control" name="state" id="editState" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Mã bưu điện (Nếu có)</label>
+                        <input type="text" class="form-control" name="zipcode" id="editZipcode">
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="is_default" id="editIsDefault">
+                        <label class="form-check-label" for="editIsDefault">
+                            Đặt làm địa chỉ mặc định
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary">Cập nhật</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function editAddress(id, address, city, state, zipcode, isDefault) {
+    document.getElementById('editAddressForm').action = `/profile/address/${id}/edit/`;
+    document.getElementById('editAddress').value = address;
+    document.getElementById('editCity').value = city;
+    document.getElementById('editState').value = state;
+    document.getElementById('editZipcode').value = zipcode || '';
+    document.getElementById('editIsDefault').checked = isDefault;
+}
+</script>
+
+<style>
+.card {
+    border: 1px solid #e0e0e0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.card.border-success {
+    border-color: #28a745 !important;
+    border-width: 2px;
+}
+</style>
+
+{% endblock %}
+

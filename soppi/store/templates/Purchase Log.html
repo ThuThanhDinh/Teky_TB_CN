@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+{% load vn_currency %}
+{% load humanize %}
+
+{% block content %}
+<div class="container mt-4">
+  <h4 class="mb-3">Lịch sử mua hàng</h4>
+
+  {% if orders %}
+    {% for entry in orders %}
+      {% with order=entry.order items=entry.items %}
+      <div class="card mb-3">
+        <div class="card-body">
+          <div class="d-flex justify-content-between">
+            <div>
+              <strong>Đơn hàng #{{ order.id }}</strong>
+              <div class="text-muted">Số món: {{ entry.item_count }}</div>
+              {% if order.completed_at %}
+              <div class="text-muted small">Ngày đặt: {{ order.completed_at|date:"d/m/Y H:i" }}</div>
+              {% endif %}
+            </div>
+            <div class="text-end">
+              <small class="text-muted">Trạng thái: {{ order.completed|yesno:"Hoàn thành,Đang xử lý" }}</small>
+            </div>
+          </div>
+          
+          <!-- Chi tiết thanh toán -->
+          <hr>
+          <div class="row">
+            <div class="col-md-6">
+              <h6 class="mb-3">Chi tiết thanh toán</h6>
+              <div class="d-flex justify-content-between mb-2">
+                <span>Tạm tính:</span>
+                <span>₫{{ entry.subtotal|floatformat:0|intcomma }}</span>
+              </div>
+              {% if entry.discount_amount > 0 %}
+              <div class="d-flex justify-content-between mb-2 text-danger">
+                <span>Giảm giá:</span>
+                <span>-₫{{ entry.discount_amount|floatformat:0|intcomma }}</span>
+              </div>
+              {% if entry.voucher_code %}
+              <div class="mb-2">
+                <small class="text-muted">
+                  <i class="bi bi-tag"></i> Mã giảm giá: <strong>{{ entry.voucher_code }}</strong>
+                  {% if entry.voucher %}
+                    {% if entry.voucher.percent and entry.voucher.percent > 0 %}
+                      ({{ entry.voucher.percent }}%)
+                    {% elif entry.voucher.fixed_amount %}
+                      (₫{{ entry.voucher.fixed_amount|floatformat:0|intcomma }})
+                    {% endif %}
+                  {% endif %}
+                </small>
+              </div>
+              {% endif %}
+              {% endif %}
+              <div class="d-flex justify-content-between mb-2">
+                <span>Phí vận chuyển:</span>
+                <span>₫{{ entry.shipping_cost|floatformat:0|intcomma }}</span>
+              </div>
+              <hr>
+              <div class="d-flex justify-content-between mb-2">
+                <strong>Tổng cộng:</strong>
+                <strong class="text-danger fs-5">₫{{ entry.total|floatformat:0|intcomma }}</strong>
+              </div>
+              <div class="mt-2">
+                <small class="text-muted">
+                  <i class="bi bi-credit-card"></i> 
+                  <strong>Phương thức thanh toán:</strong> 
+                  {% if order.payment_method == 'cod' %}
+                    <span class="badge bg-success">Thanh toán khi nhận hàng</span>
+                  {% elif order.payment_method == 'bank' %}
+                    <span class="badge bg-primary">Thanh toán qua ngân hàng</span>
+                  {% else %}
+                    <span class="badge bg-secondary">Chưa xác định</span>
+                  {% endif %}
+                </small>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <h6 class="mb-3">Sản phẩm</h6>
+              {% for item in items %}
+                <div class="mb-2">
+                  <div class="d-flex align-items-center gap-3">
+                    <img src="{{ item.product.image.url }}" style="width:80px; height:60px; object-fit:cover; border-radius:6px;" alt="">
+                    <div>
+                      <div class="order-item-name">
+                        <a href="{% url 'product_detail' item.product.id %}" class="product-link">
+                          {{ item.product.name }}
+                        </a>
+                      </div>
+                      <div class="text-muted">Số lượng: {{ item.quantity }} — Giá: ₫{{ item.product.price|floatformat:0|intcomma }}</div>
+                    </div>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+
+          {% if entry.shipping %}
+            <hr>
+            <div>
+              <strong>Địa chỉ giao hàng</strong>
+              <div class="text-muted">{{ entry.shipping.address }}, {{ entry.shipping.city }}, {{ entry.shipping.state }}{% if entry.shipping.zipcode %}, {{ entry.shipping.zipcode }}{% endif %}</div>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+      {% endwith %}
+    {% endfor %}
+  {% else %}
+    <p class="text-muted">Bạn chưa có đơn hàng nào.</p>
+  {% endif %}
+</div>
+<style>
+    .product-link {
+  color: #222;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.product-link:hover {
+  color: #ff6f3d;
+  text-decoration: none;
+}
+</style>
+{% endblock %}

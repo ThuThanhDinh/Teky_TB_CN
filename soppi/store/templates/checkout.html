@@ -27,8 +27,9 @@
         </div>
     </div>
 
-    <form method="post" action="{% url 'place_order' %}">
+    <form method="post" action="{% url 'place_order' %}" id="checkout-form">
         {% csrf_token %}
+        <input type="hidden" name="selected_voucher" id="voucher-input" value="{% if selected_voucher %}{{ selected_voucher.code }}{% endif %}">
     <div class="row">
         <!-- Cột trái - Thông tin đơn hàng -->
         <div class="col-md-8">
@@ -51,26 +52,45 @@
                             <input type="text" class="form-control" value="{{ customer.email|default:user.email }}" readonly>
                         </div>
                     </div>
+                    {% if default_address %}
+                    <div class="alert alert-info mb-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong><i class="bi bi-check-circle"></i> Địa chỉ mặc định:</strong>
+                                <div class="small mt-1">{{ default_address.address }}, {{ default_address.city }}, {{ default_address.state }}{% if default_address.zipcode %}, {{ default_address.zipcode }}{% endif %}</div>
+                            </div>
+                            <a href="{% url 'profile' %}" class="btn btn-sm btn-outline-primary">Thay đổi</a>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-warning mb-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <small><i class="bi bi-info-circle"></i> Bạn chưa có địa chỉ mặc định. <a href="{% url 'profile' %}">Thêm địa chỉ</a> để tự động điền ở lần sau.</small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
                     <div class="row mt-3">
                         <div class="col-md-12">
                             <label class="form-label">Địa chỉ *</label>
-                            <input type="text" class="form-control" id="shipping_address" name="shipping_address" placeholder="Nhập địa chỉ giao hàng" required>
+                            <input type="text" class="form-control" id="shipping_address" name="shipping_address" value="{% if default_address %}{{ default_address.address }}{% endif %}" placeholder="Nhập địa chỉ giao hàng" required>
                         </div>
                     </div>
                     <div class="row mt-3">
                         <div class="col-md-6">
                             <label class="form-label">Quận *</label>
-                            <input type="text" class="form-control" id="shipping_city" name="shipping_city" placeholder="" required>
+                            <input type="text" class="form-control" id="shipping_city" name="shipping_city" value="{% if default_address %}{{ default_address.city }}{% endif %}" placeholder="" required>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Tỉnh/Thành phố *</label>
-                            <input type="text" class="form-control" id="shipping_state" name="shipping_state" placeholder="" required>
+                            <input type="text" class="form-control" id="shipping_state" name="shipping_state" value="{% if default_address %}{{ default_address.state }}{% endif %}" placeholder="" required>
                         </div>
                     </div>
                     <div class="row mt-3">
                         <div class="col-md-6">
                             <label class="form-label">Mã bưu điện (Nếu có)</label>
-                            <input type="text" class="form-control" id="shipping_zipcode" name="shipping_zipcode" placeholder="">
+                            <input type="text" class="form-control" id="shipping_zipcode" name="shipping_zipcode" value="{% if default_address %}{{ default_address.zipcode }}{% endif %}" placeholder="">
                         </div>
                     </div>
                 </div>
@@ -111,6 +131,42 @@
                 </div>
             </div>
 
+            <!-- Phương thức thanh toán -->
+            <div class="card mb-4">
+                <div class="card-header bg-white">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-credit-card text-danger me-2"></i>
+                        <h6 class="mb-0">Phương thức thanh toán</h6>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="form-check mb-3 p-3 border rounded" style="cursor: pointer;" onclick="document.getElementById('payment_cod').checked = true;">
+                        <input class="form-check-input" type="radio" name="payment_method" id="payment_cod" value="cod" checked>
+                        <label class="form-check-label w-100" for="payment_cod" style="cursor: pointer;">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-cash-coin text-success me-2" style="font-size: 1.5rem;"></i>
+                                <div>
+                                    <strong>Thanh toán khi nhận hàng (COD)</strong>
+                                    <div class="small text-muted">Thanh toán bằng tiền mặt khi nhận được hàng</div>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                    <div class="form-check p-3 border rounded" style="cursor: pointer;" onclick="document.getElementById('payment_bank').checked = true;">
+                        <input class="form-check-input" type="radio" name="payment_method" id="payment_bank" value="bank">
+                        <label class="form-check-label w-100" for="payment_bank" style="cursor: pointer;">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-bank text-primary me-2" style="font-size: 1.5rem;"></i>
+                                <div>
+                                    <strong>Thanh toán qua ngân hàng</strong>
+                                    <div class="small text-muted">Chuyển khoản qua ngân hàng hoặc ví điện tử</div>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
             <!-- Lời nhắn -->
             <div class="card mb-4">
                 <div class="card-body">
@@ -145,11 +201,109 @@
                         <small>Nhận Voucher trị giá ₫15.000 nếu đơn hàng được giao đến bạn sau</small>
                     </div>
 
-                    <!-- Tổng tiền -->
+                                        <!-- Available Vouchers -->
+                                        {% if applicable_vouchers %}
+                                        <div class="mb-3">
+                                            <h6>Voucher khả dụng</h6>
+                                            <div class="list-group">
+                                                {% for v in applicable_vouchers %}
+                                    {% if subtotal < v.min_purchase or not v.enabled %}
+                                                        <label class="list-group-item d-flex align-items-center text-muted" style="position: relative; overflow: hidden;">
+                                                            {% if v.free_shipping %}
+                                                            <div class="freeship-banner">
+                                                                <i class="bi bi-truck"></i> Freeship
+                                                            </div>
+                                                            {% endif %}
+                                                            {% if v.image %}
+                                                                <img src="{{ v.image.url }}" alt="{{ v.code }}" style="width:48px; height:48px; object-fit:cover; margin-right:10px;" class="rounded">
+                                                            {% endif %}
+                                                            <div class="flex-grow-1">
+                                                                <div class="d-flex justify-content-between align-items-center">
+                                                                    <div>
+                                                                        <strong>{{ v.code }}</strong> {% if v.percent and v.percent > 0 %}<small class="text-muted">- {{ v.percent }}%</small>{% endif %}{% if v.fixed_amount %}<small class="text-muted">- ₫{{ v.fixed_amount|intcomma }}</small>{% endif %}
+                                                                    </div>
+                                                                    <button type="button" class="btn btn-sm btn-outline-info ms-2" onclick="showVoucherDetail('{{ v.code }}')" data-bs-toggle="modal" data-bs-target="#voucherDetailModal">
+                                                                        <i class="bi bi-info-circle"></i> Chi tiết
+                                                                    </button>
+                                                                </div>
+                                                                <div class="small mt-1">{{ v.desc }}</div>
+                                                                <div class="small text-danger mt-1">
+                                                                    <i class="bi bi-exclamation-circle"></i> 
+                                                                    <strong>Điều kiện:</strong> Mua hàng tối thiểu ₫{{ v.min_purchase|intcomma }}
+                                                                    {% if subtotal < v.min_purchase %}
+                                                                        <span class="badge bg-warning text-dark ms-1" data-min="{{ v.min_purchase }}" data-subtotal="{{ subtotal }}">Đang tính...</span>
+                                                                    {% else %}
+                                                                        <span class="badge bg-secondary ms-1">Voucher đã tắt</span>
+                                                                    {% endif %}
+                                                                </div>
+                                                            </div>
+                                                            <div class="ms-2">
+                                                                <input type="radio" name="selected_voucher" value="{{ v.code }}" disabled>
+                                                            </div>
+                                                        </label>
+                                                    {% else %}
+                                                        <label class="list-group-item d-flex align-items-center {% if selected_voucher and selected_voucher.code == v.code %}bg-light border-success{% endif %}" style="position: relative; overflow: hidden;">
+                                                            {% if v.free_shipping %}
+                                                            <div class="freeship-banner">
+                                                                <i class="bi bi-truck"></i> Freeship
+                                                            </div>
+                                                            {% endif %}
+                                                            {% if v.image %}
+                                                                <img src="{{ v.image.url }}" alt="{{ v.code }}" style="width:48px; height:48px; object-fit:cover; margin-right:10px;" class="rounded">
+                                                            {% endif %}
+                                                            <div class="flex-grow-1">
+                                                                <div class="d-flex justify-content-between align-items-center">
+                                                                    <div>
+                                                                        <strong>{{ v.code }}</strong> 
+                                                                        {% if v.percent and v.percent > 0 %}<small class="text-muted">- {{ v.percent }}%</small>{% endif %}
+                                                                        {% if v.fixed_amount %}<small class="text-muted">- ₫{{ v.fixed_amount|intcomma }}</small>{% endif %}
+                                                                    </div>
+                                                                    <button type="button" class="btn btn-sm btn-outline-info ms-2" onclick="showVoucherDetail('{{ v.code }}')" data-bs-toggle="modal" data-bs-target="#voucherDetailModal">
+                                                                        <i class="bi bi-info-circle"></i> Chi tiết
+                                                                    </button>
+                                                                </div>
+                                                                <div class="small mt-1">{{ v.desc }}</div>
+                                                                <div class="small text-danger mt-1">
+                                                                    <i class="bi bi-exclamation-circle"></i> 
+                                                                    <strong>Điều kiện:</strong> Mua hàng tối thiểu ₫{{ v.min_purchase|intcomma }}
+                                                                    {% if subtotal < v.min_purchase %}
+                                                                        <span class="badge bg-warning text-dark ms-1" data-min="{{ v.min_purchase }}" data-subtotal="{{ subtotal }}">Đang tính...</span>
+                                                                    {% else %}
+                                                                        <span class="badge bg-success ms-1">Đủ điều kiện</span>
+                                                                    {% endif %}
+                                                                </div>
+                                                            </div>
+                                                            <div class="ms-2">
+                                                                <input type="radio" name="selected_voucher" value="{{ v.code }}" {% if selected_voucher and selected_voucher.code == v.code %}checked{% endif %}>
+                                                            </div>
+                                                        </label>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                        {% endif %}
+
+                                        <!-- Tổng tiền -->
                     <div class="border-top pt-3">
-                        {% if voucher_name %}
+                        {% if selected_voucher and voucher_name %}
                         <div class="alert alert-success mb-2">
-                            <i class="bi bi-check-circle"></i> {{ voucher_name }}
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <i class="bi bi-check-circle"></i> <strong>Voucher đã áp dụng:</strong> {{ voucher_name }}
+                                    {% if selected_voucher.percent and selected_voucher.percent > 0 %}
+                                        <br><small>- Giảm {{ selected_voucher.percent }}%{% if selected_voucher.max_amount %} (tối đa ₫{{ selected_voucher.max_amount|intcomma }}){% endif %}</small>
+                                    {% elif selected_voucher.fixed_amount %}
+                                        <br><small>- Giảm ₫{{ selected_voucher.fixed_amount|intcomma }}</small>
+                                    {% endif %}
+                                    {% if selected_voucher.free_shipping %}
+                                        <br><small>- Miễn phí vận chuyển</small>
+                                    {% endif %}
+                                    <br><small class="text-muted">- Điều kiện: Mua hàng tối thiểu ₫{{ selected_voucher.min_purchase|intcomma }}</small>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-outline-info" onclick="showVoucherDetail('{{ selected_voucher.code }}')" data-bs-toggle="modal" data-bs-target="#voucherDetailModal">
+                                    <i class="bi bi-info-circle"></i>
+                                </button>
+                            </div>
                         </div>
                         {% endif %}
                         <div class="d-flex justify-content-between mb-2">
@@ -174,7 +328,7 @@
                     </div>
 
                     <!-- Nút thanh toán -->
-                    <button type="submit" class="btn btn-danger w-100 btn-lg">
+                    <button type="submit" class="btn btn-danger w-100 btn-lg" id="place-order-btn">
                         Đặt hàng
                     </button>
                 </div>
@@ -182,6 +336,28 @@
         </div>
     </div>
     </form>
+</div>
+
+<!-- Modal for Voucher Details -->
+<div class="modal fade" id="voucherDetailModal" tabindex="-1" aria-labelledby="voucherDetailModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="voucherDetailModalLabel">Chi tiết Voucher</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="voucherDetailContent">
+                <div class="text-center">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <style>
@@ -234,6 +410,140 @@
 .progress-bar.bg-secondary {
     background-color: #6c757d !important;
 }
+
+.form-check-input[type="radio"]:checked {
+    background-color: #f53d2d;
+    border-color: #f53d2d;
+}
+
+.form-check.p-3.border.rounded:hover {
+    background-color: #f8f9fa;
+    border-color: #f53d2d !important;
+}
+
+.form-check-input[type="radio"]:checked + .form-check-label .border.rounded {
+    border-color: #f53d2d !important;
+}
+
+.freeship-banner {
+    position: absolute;
+    top: 6px;
+    left: -32px;
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+    padding: 3px 30px;
+    font-size: 0.65rem;
+    font-weight: bold;
+    transform: rotate(-45deg);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    z-index: 10;
+    white-space: nowrap;
+    pointer-events: none;
+}
+
+.freeship-banner i {
+    margin-right: 2px;
+}
+
+.list-group-item {
+    padding-left: 8px !important;
+    padding-top: 10px !important;
+    padding-right: 8px !important;
+    padding-bottom: 8px !important;
+}
 </style>
+
+<script>
+// Calculate remaining amount needed for vouchers
+document.addEventListener('DOMContentLoaded', function() {
+    const badges = document.querySelectorAll('.badge.bg-warning[data-min][data-subtotal]');
+    badges.forEach(badge => {
+        const min = parseFloat(badge.getAttribute('data-min'));
+        const subtotal = parseFloat(badge.getAttribute('data-subtotal'));
+        const needed = min - subtotal;
+        if (needed > 0) {
+            badge.textContent = 'Cần thêm ₫' + needed.toLocaleString('vi-VN');
+        }
+    });
+});
+
+// Handle voucher selection changes in checkout
+document.addEventListener('DOMContentLoaded', function() {
+    const voucherRadios = document.querySelectorAll('input[name="selected_voucher"]');
+    const voucherInput = document.getElementById('voucher-input');
+    const checkoutForm = document.getElementById('checkout-form');
+    const placeOrderBtn = document.getElementById('place-order-btn');
+    const originalAction = checkoutForm ? checkoutForm.action : '';
+    
+    // Update hidden input when voucher changes
+    voucherRadios.forEach((radio) => {
+        radio.addEventListener('change', function() {
+            if (voucherInput) {
+                voucherInput.value = this.value;
+            }
+            // Submit to checkout to recalculate discount
+            if (checkoutForm) {
+                checkoutForm.action = "{% url 'checkout' %}";
+                checkoutForm.submit();
+            }
+        });
+    });
+    
+    // Ensure place order button submits to place_order
+    if (placeOrderBtn && checkoutForm) {
+        placeOrderBtn.addEventListener('click', function(e) {
+            checkoutForm.action = originalAction;
+        });
+    }
+});
+
+// Show voucher detail modal
+function showVoucherDetail(voucherCode) {
+    const modalContent = document.getElementById('voucherDetailContent');
+    modalContent.innerHTML = '<div class="text-center"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>';
+    
+    fetch(`/voucher/${voucherCode}/`)
+        .then(response => response.json())
+        .then(data => {
+            let html = '';
+            if (data.image) {
+                html += `<div class="text-center mb-3"><img src="${data.image}" alt="${data.code}" class="img-fluid" style="max-height: 150px;"></div>`;
+            }
+            html += `<h5 class="text-center mb-3">${data.code}</h5>`;
+            html += `<div class="mb-2"><strong>Mô tả:</strong> ${data.desc || 'Không có mô tả'}</div>`;
+            
+            if (data.percent && data.percent > 0) {
+                html += `<div class="mb-2"><strong>Giảm giá:</strong> ${data.percent}%`;
+                if (data.max_amount) {
+                    html += ` (tối đa ₫${parseFloat(data.max_amount).toLocaleString('vi-VN')})`;
+                }
+                html += `</div>`;
+            } else if (data.fixed_amount) {
+                html += `<div class="mb-2"><strong>Giảm giá:</strong> ₫${parseFloat(data.fixed_amount).toLocaleString('vi-VN')}</div>`;
+            }
+            
+            html += `<div class="mb-2"><strong>Điều kiện:</strong> Mua hàng tối thiểu ₫${parseFloat(data.min_purchase).toLocaleString('vi-VN')}</div>`;
+            
+            if (data.free_shipping) {
+                html += `<div class="mb-2"><span class="badge bg-success">Miễn phí vận chuyển</span></div>`;
+            }
+            
+            if (data.ranks && data.ranks.length > 0) {
+                html += `<div class="mb-2"><strong>Áp dụng cho hạng:</strong> ${data.ranks.join(', ')}</div>`;
+            }
+            
+            html += `<div class="mb-2"><strong>Trạng thái:</strong> <span class="badge ${data.enabled ? 'bg-success' : 'bg-secondary'}">${data.enabled ? 'Đang hoạt động' : 'Đã tắt'}</span></div>`;
+            
+            if (!data.is_applicable) {
+                html += `<div class="alert alert-warning mt-3"><small>Voucher này không khả dụng với hạng của bạn.</small></div>`;
+            }
+            
+            modalContent.innerHTML = html;
+        })
+        .catch(error => {
+            modalContent.innerHTML = '<div class="alert alert-danger">Không thể tải thông tin voucher.</div>';
+        });
+}
+</script>
 
 {% endblock %}

@@ -1,0 +1,226 @@
+{% extends 'base.html' %}
+{% load vn_currency %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+
+    <!-- CHỈNH SỬA: bỏ row + col nhỏ, dùng full-width -->
+    <div class="product-detail mx-auto" style="max-width: 900px;"> <!-- CHỈNH SỬA -->
+
+        <div class="card p-3"> <!-- CHỈNH SỬA -->
+            <div class="position-relative text-center"> <!-- CHỈNH SỬA: căn giữa ảnh -->
+                <img src="{{ product.image.url }}" class="img-fluid" style="max-height: 400px; object-fit: contain;"> <!-- CHỈNH SỬA -->
+
+                <div class="position-absolute top-0 end-0 m-2">
+                    <span class="badge bg-danger">Yêu thích+</span>
+                </div>
+            </div>
+
+            <div class="card-body">
+                <h4 class="fw-bold mb-3">{{ product.name }}</h4> <!-- CHỈNH SỬA to hơn -->
+
+                <div class="d-flex align-items-center mb-2">
+                    <span class="text-danger fw-bold fs-3">₫{{ product.price|vn_currency }}</span> <!-- CHỈNH SỬA -->
+                </div>
+
+                <div class="mb-3">
+                    <small class="text-muted text-decoration-line-through fs-6">
+                        ₫{{ product.price|vn_currency }}
+                    </small>
+                </div>
+                {% if product.description %}
+                    <div class="mb-3">
+                        <h5>Mô tả sản phẩm:</h5>
+                        <p class="text-secondary">{{ product.description|linebreaksbr }}</p>
+                    </div>
+                {% endif %}
+                
+                <!-- Shop Info -->
+                {% if shop %}
+                <div class="mb-3 p-3 border rounded">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center">
+                            {% if shop.logo %}
+                            <img src="{{ shop.logo.url }}" alt="{{ shop.name }}" class="rounded-circle me-2" style="width: 50px; height: 50px; object-fit: cover;">
+                            {% else %}
+                            <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center me-2" style="width: 50px; height: 50px;">
+                                <i class="bi bi-shop text-white"></i>
+                            </div>
+                            {% endif %}
+                            <div>
+                                <strong>{{ shop.name }}</strong>
+                                <div class="small text-muted">{{ shop.product_count }} sản phẩm</div>
+                            </div>
+                        </div>
+                        <a href="{% url 'shop_detail' shop.id %}" class="btn" style="background: linear-gradient(to right, #f53d2d, #ff7337); color: white; border: none;">
+                            <i class="bi bi-shop"></i> Xem cửa hàng
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <!-- Nút thêm giỏ hàng đặt rõ ràng -->
+                <form method="post" action="{% url 'add_to_cart' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="product_id" value="{{ product.id }}">
+                    <button type="submit" class="btn w-100 py-2 fs-5" style="background: linear-gradient(to right, #f53d2d, #ff7337); color: white; border: none;">Thêm vào giỏ hàng</button>
+                    <!-- CHỈNH SỬA: nút lớn hơn -->
+                </form>
+            </div>
+        </div>
+
+        <!-- Reviews Section -->
+        <div class="card mt-3 p-3">
+            <h5 class="mb-3">Đánh giá sản phẩm ({{ rating_count }})</h5>
+
+            <!-- Rating summary -->
+            <div class="mb-3 d-flex align-items-center gap-3">
+                <div class="rating-summary">
+                    <span class="fw-bold">Đánh giá:</span>
+                    <span class="ms-2">{{ avg_rating|floatformat:1 }} stars</span>
+                </div>
+                <div class="text-muted">{{ rating_count }} đánh giá</div>
+            </div>
+
+            <!-- Reviews list -->
+            {% if reviews %}
+                <div class="reviews-list mb-3" style="max-height: 400px; overflow-y: auto;">
+                    {% for review in reviews %}
+                        <div class="mb-3 pb-2 border-bottom">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <strong class="text-primary">{{ review.user.username }}</strong>
+                                    <div class="text-warning">
+                                        {% for i in "12345" %}
+                                            {% if forloop.counter <= review.rating %}
+                                                <i class="bi bi-star-fill"></i>
+                                            {% else %}
+                                                <i class="bi bi-star"></i>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                <small class="text-muted">{{ review.created_at|date:"d/m/Y H:i" }}</small>
+                            </div>
+                            {% if review.content %}
+                                <p class="text-secondary mt-2">{{ review.content }}</p>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-muted">Chưa có đánh giá nào</p>
+            {% endif %}
+
+            <!-- Add review form -->
+            <hr>
+            <h6 class="mb-3">Viết đánh giá của bạn:</h6>
+            <form method="post">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="form-label">Đánh giá:</label>
+                    <div class="d-flex gap-2">
+                        {% for i in "12345" %}
+                            <input type="radio" id="star{{ i }}" name="review_rating" value="{{ i }}" style="display:none;" required>
+                            <label for="star{{ i }}" class="star-label" style="cursor:pointer; font-size:24px; color:#dee2e6;">
+                                <i class="bi bi-star-fill"></i>
+                            </label>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Bình luận (tùy chọn):</label>
+                    <textarea name="review_content" class="form-control" rows="3" placeholder="Chia sẻ trải nghiệm của bạn..."></textarea>
+                </div>
+                <button type="submit" class="btn" style="background: linear-gradient(to right, #f53d2d, #ff7337); color: white; border: none;">Gửi đánh giá</button>
+            </form>
+        </div>
+
+    </div>
+
+</div>
+
+<style>
+
+/* Review star input styling */
+.star-label {
+    cursor: pointer;
+    color: #dee2e6;
+    transition: all 0.2s ease;
+}
+
+.star-label:hover,
+.star-label:hover ~ .star-label {
+    color: #ffc107;
+}
+
+input[type="radio"][name="review_rating"]:checked + .star-label,
+input[type="radio"][name="review_rating"]:checked + .star-label ~ .star-label {
+    color: #ffc107;
+}
+
+.reviews-list {
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    padding: 12px;
+    background-color: #f8f9fa;
+}
+
+/* Pagination styling */
+.pagination {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 20px;
+}
+
+.pagination a, .pagination span {
+    padding: 8px 14px;
+    border-radius: 6px;
+    border: 1px solid #ddd;
+}
+
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const starLabels = document.querySelectorAll('.star-label');
+    const starInputs = document.querySelectorAll('input[name="review_rating"]');
+    const ratingContainer = document.querySelector('.d-flex.gap-2');
+
+    starLabels.forEach((label, index) => {
+        label.addEventListener('mouseover', function() {
+            starLabels.forEach((l, i) => {
+                l.style.color = i <= index ? '#ffc107' : '#dee2e6';
+            });
+        });
+
+        label.addEventListener('click', function() {
+            starInputs[index].checked = true;
+            updateStarDisplay();
+        });
+    });
+
+    ratingContainer.addEventListener('mouseleave', function() {
+        updateStarDisplay();
+    });
+
+    function updateStarDisplay() {
+        let checkedIndex = -1;
+        starInputs.forEach((input, i) => {
+            if (input.checked) {
+                checkedIndex = i;
+            }
+        });
+
+        starLabels.forEach((l, idx) => {
+            if (checkedIndex >= 0) {
+                l.style.color = idx <= checkedIndex ? '#ffc107' : '#dee2e6';
+            } else {
+                l.style.color = '#dee2e6';
+            }
+        });
+    }
+});
+</script>
+{% endblock %}
