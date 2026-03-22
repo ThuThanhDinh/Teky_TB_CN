@@ -104,7 +104,7 @@
               {{ user.username }}
             </button>
             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-              <li><a class="dropdown-item" href="#">Hồ sơ</a></li>
+              <li><a class="dropdown-item" href="{% url 'profile' %}">Hồ sơ</a></li>
               <li><a class="dropdown-item" href="{% url 'cart' %}">Giỏ hàng</a></li>
               <li><a class="dropdown-item" href="{% url 'purchase_history' %}">Lịch sử mua hàng</a></li>
               <li><hr class="dropdown-divider"></li>

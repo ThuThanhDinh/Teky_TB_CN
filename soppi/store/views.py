@@ -3,6 +3,7 @@ from django.http import HttpResponse
 from .models import *
 from itertools import product
 from django.db import models
+from django.db.models import Q
 
 from .models import Cartitems, Customer, Product, Cart
 
@@ -222,6 +223,20 @@ def store(request):
     else:
         shops = Shop.objects.filter(is_active=True).order_by('-created_at')[:8]
 
+    # Get featured products: products with most reviews, prioritizing 5-star reviews
+    from django.db.models import Count, Avg
+    featured_products = Product.objects.annotate(
+        total_reviews=Count('comments'),
+        five_star_reviews=Count('comments', filter=Q(comments__rating=5)),
+        avg_rating=Avg('comments__rating')
+    ).filter(total_reviews__gt=0).order_by('-five_star_reviews', '-total_reviews')[:10]
+
+    # Group featured products into slides of 4
+    featured_slides = []
+    products_list = list(featured_products)
+    for i in range(0, len(products_list), 4):
+        featured_slides.append(products_list[i:i+4])
+
     # total matches (across all pages) when searching
     results_count = products_qs.count() if query else products_qs.count()
     return render(request, 'store.html', {
@@ -235,6 +250,7 @@ def store(request):
         'rating': rating_min or '',
         'applicable_vouchers': applicable_vouchers,
         'shops': shops,
+        'featured_slides': featured_slides,
     })
 
 
