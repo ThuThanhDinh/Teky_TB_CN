@@ -125,10 +125,67 @@
 
         <!-- Products Container -->
         <div class="col-md-9">
+            <!-- Shop Search Results (When searching for shops) -->
+            {% if query and search_type == 'shop' %}
+            <div class="mb-4">
+                <h5 class="mb-3 fw-bold">Cửa hàng tìm thấy</h5>
+                <div class="row">
+                    {% for shop in shops %}
+                    <div class="col-md-6 col-lg-4 mb-4">
+                        <div class="card h-100 shop-card" style="cursor: pointer;" onclick="window.location.href='{% url 'shop_detail' shop.id %}'">
+                            {% if shop.cover_image %}
+                            <div class="position-relative" style="height: 150px; overflow: hidden;">
+                                <img src="{{ shop.cover_image.url }}" class="card-img-top" alt="{{ shop.name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                            </div>
+                            {% else %}
+                            <div class="bg-light" style="height: 150px; display: flex; align-items: center; justify-content: center;">
+                                <i class="bi bi-shop" style="font-size: 3rem; color: #ccc;"></i>
+                            </div>
+                            {% endif %}
+                            <div class="card-body">
+                                <div class="d-flex align-items-start mb-2">
+                                    {% if shop.logo %}
+                                    <img src="{{ shop.logo.url }}" alt="{{ shop.name }}" class="rounded-circle me-2" style="width: 50px; height: 50px; object-fit: cover;">
+                                    {% else %}
+                                    <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center me-2" style="width: 50px; height: 50px;">
+                                        <i class="bi bi-shop text-white"></i>
+                                    </div>
+                                    {% endif %}
+                                    <div class="flex-grow-1">
+                                        <h6 class="card-title mb-1">{{ shop.name }}</h6>
+                                        <div class="d-flex align-items-center mb-1">
+                                            <span class="text-warning me-1">
+                                                {% for i in "12345" %}
+                                                    {% if forloop.counter <= shop.average_rating|floatformat:0|add:"0" %}
+                                                        <i class="bi bi-star-fill"></i>
+                                                    {% else %}
+                                                        <i class="bi bi-star"></i>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </span>
+                                            <small class="text-muted">({{ shop.average_rating|floatformat:1 }})</small>
+                                        </div>
+                                        <small class="text-muted d-block">{{ shop.product_count }} sản phẩm</small>
+                                    </div>
+                                </div>
+                                {% if shop.address %}
+                                <div class="small text-muted mb-2">
+                                    <i class="bi bi-geo-alt"></i> {{ shop.address|truncatewords:8 }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <hr class="my-4">
+            </div>
+            {% endif %}
+
             {% if query %}
             <div class="mb-3">
                 {% if search_type == 'shop' %}
-                <div class="alert alert-light py-2">{{ shops|length }} cửa hàng được tìm thấy cho "<strong>{{ query }}</strong>"</div>
+                <div class="alert alert-light py-2">{{ results_count }} sản phẩm từ cửa hàng "<strong>{{ query }}</strong>"</div>
                 {% else %}
                 <div class="alert alert-light py-2">{{ results_count }} sản phẩm được tìm thấy cho "<strong>{{ query }}</strong>"</div>
                 {% endif %}
@@ -188,9 +245,10 @@
     </div>
     
     <!-- Shops Section (Bottom) -->
+    {% if search_type != 'shop' or not query %}
     <div class="row mt-5">
         <div class="col-12">
-            <h4 class="mb-4">{% if query and search_type == 'shop' %}Kết quả tìm kiếm cửa hàng{% else %}Cửa hàng nổi bật{% endif %}</h4>
+            <h4 class="mb-4">Cửa hàng nổi bật</h4>
             <div class="row">
                 {% for shop in shops %}
                 <div class="col-md-3 col-lg-3 mb-4">
@@ -246,6 +304,7 @@
             </div>
         </div>
     </div>
+    {% endif %}
 </div>
 
 <style>

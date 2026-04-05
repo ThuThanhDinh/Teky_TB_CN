@@ -170,8 +170,8 @@ def store(request):
     if query and search_type == 'shop':
         # Filter shops by name
         shops_qs = Shop.objects.filter(name__icontains=query, is_active=True)
-        # Get products normally (no product search when searching shops)
-        products_qs = Product.objects.all()
+        # Get products from matching shops only
+        products_qs = Product.objects.filter(shop__in=shops_qs)
     else:
         # Normal product search
         if query:
@@ -217,10 +217,12 @@ def store(request):
     ctx = voucher_context(request)
     applicable_vouchers = ctx.get('applicable_vouchers', [])
     
-    # Get shops for bottom section (limit to 8 shops, or filtered shops if searching)
+    # Get shops for top section (when searching by shop name, show filtered shops; otherwise show featured shops)
     if query and search_type == 'shop':
-        shops = shops_qs.order_by('-created_at')[:8]
+        # When searching for shops, display them prominently
+        shops = shops_qs.order_by('-created_at')
     else:
+        # Otherwise show featured shops (limit to 8)
         shops = Shop.objects.filter(is_active=True).order_by('-created_at')[:8]
 
     # Get featured products: products with most reviews, prioritizing 5-star reviews
